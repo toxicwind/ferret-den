@@ -12,7 +12,7 @@ export async function executeKatana(
   scope?: string,
   maxDurationSeconds?: number
 ): Promise<KatanaResult> {
-  const list = cleanList(urls, 100);
+  const list = cleanList(urls, 100, 2000);
   if (list.length === 0) return { endpoints: [], count: 0, error: "no valid urls" };
   const d = Math.min(Math.max(Math.floor(depth) || 2, 1), 5);
   const args = ["-d", String(d), "-jsonl", "-silent"];

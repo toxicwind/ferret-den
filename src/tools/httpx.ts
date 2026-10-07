@@ -18,7 +18,7 @@ export async function executeHttpx(
   followRedirects = false,
   techDetect = false
 ): Promise<HttpxResult> {
-  const list = cleanList(urls);
+  const list = cleanList(urls, 1000, 2000);
   if (list.length === 0) return { responses: [], count: 0, error: "no valid urls/hosts" };
   const args = ["-json", "-silent"];
   if (followRedirects) args.push("-fr");

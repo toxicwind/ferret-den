@@ -21,7 +21,7 @@ export async function executeNuclei(
   templateIds?: string[],
   severity?: string[]
 ): Promise<NucleiResult> {
-  const list = cleanList(targets, 500);
+  const list = cleanList(targets, 500, 2000);
   if (list.length === 0) return { vulnerabilities: [], count: 0, error: "no valid targets" };
   const args = ["-jsonl", "-silent", "-duc", "-nc"];
   const ids = (templateIds ?? []).map((t) => String(t).trim()).filter((t) => t && t.length <= 200 && !/[\0\r\n]/.test(t));
