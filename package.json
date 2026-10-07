@@ -1,7 +1,7 @@
 {
   "name": "ferret-den",
   "version": "1.1.0",
-  "description": "Ferret-den MCP server for the ProjectDiscovery bins.",
+  "description": "stdio MCP server. An agent calls a recon job. The server spawns the binary. No shell.",
   "type": "module",
   "bin": {
     "ferret-den": "./build/index.js"
