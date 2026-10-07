@@ -15,7 +15,7 @@ An MCP server that exposes ProjectDiscovery reconnaissance binaries under decoup
 
 </div>
 
-![A ferret in the trash pulls out a scrap labeled subfinder. The door only says whisker.](docs/header.svg)
+![A ferret in the trash holds a scrap labeled subfinder. The door only says den:whisker.](docs/header.jpg)
 
 ---
 
