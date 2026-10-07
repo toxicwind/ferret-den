@@ -61,7 +61,7 @@ The first nine jobs have typed schemas. The rest take `target` and a short `args
 | `den:tunnel` | katana | Crawls pages and JavaScript links. | |
 | `den:rummage` | shuffledns | Brute-forces names against a wordlist. | |
 | `den:fang` | nuclei | Runs vulnerability and configuration templates. | `confirm: true` |
-| `den:raid` | chain | Runs subfinder, dnsx, naabu, httpx, katana, then nuclei. | `confirm: true` |
+| `den:raid` | chain | Runs subfinder, dnsx, naabu, then probes the open ports with httpx, crawls, and scans with nuclei. | `confirm: true` |
 | `den:keeper` | pdtm | Installs or updates the ProjectDiscovery binaries. | `confirm: true` |
 | `den:expose` | uncover | Finds exposed assets and admin panels. | |
 | `den:chatter` | notify | Sends a webhook or message. | `confirm: true` |
