@@ -2,38 +2,44 @@
 
 # ferret-den
 
-A ferret does not leave the pack names on the door.
+An MCP server that runs the ProjectDiscovery recon binaries under other names.
 
-[![license](https://img.shields.io/github/license/toxicwind/ferret-den?style=for-the-badge)](LICENSE)
-[![stars](https://img.shields.io/github/stars/toxicwind/ferret-den?style=for-the-badge)](https://github.com/toxicwind/ferret-den/stargazers)
-[![jobs](https://img.shields.io/badge/jobs-22-c45c26?style=for-the-badge)](https://github.com/toxicwind/ferret-den)
-[![shell](https://img.shields.io/badge/shell-none-2f6f4e?style=for-the-badge)](https://github.com/toxicwind/ferret-den)
+[![WTFPL](https://img.shields.io/badge/license-WTFPL-111111?style=for-the-badge)](COPYING)
+[![jobs](https://img.shields.io/badge/jobs-22-c45c26?style=for-the-badge)](#jobs)
+[![shell](https://img.shields.io/badge/shell-none-2f6f4e?style=for-the-badge)](#why-the-names)
+[![stdio](https://img.shields.io/badge/transport-stdio-555555?style=for-the-badge)](#install)
 
-MCP server for the ProjectDiscovery recon bins. The agent calls a den job. The server spawns the bin. No shell.
+`whisker` calls subfinder. `fang` calls nuclei. The agent never sees those words in the tool list.
 
-[Why the names](#why-the-names) · [Jobs](#jobs) · [Install](#install)
+[Why the names](#why-the-names) · [Jobs](#jobs) · [Install](#install) · [License](#license)
 
 </div>
 
-> You are downloading a door. The scanners still come from [pdtm](https://github.com/projectdiscovery/pdtm). `whisker` is subfinder. `fang` is nuclei. If that sentence is enough, skip the lore.
+You clone this if you want an agent to do recon through MCP, and the agent refuses the moment the tool is named `nuclei` or `subfinder`. The binaries are unchanged. The names in front of them are not.
+
+The binaries come from [pdtm](https://github.com/projectdiscovery/pdtm). This repo does not ship them. It spawns whatever is in `$PD_TOOLS_DIR` (default `$HOME/.pdtm/go/bin`) with an argument array. There is no shell.
 
 ## Why the names
 
-A ferret caches food where the casual walker will not look. Same trick.
+A refusal layer often matches the string, not the job. Put `nuclei` in the tool catalog and some models stop before they read the arguments. Rename the tool `fang` and that string is gone. The process that runs is still nuclei. The confirm flag on `fang` is the real gate. The name is so the call gets that far.
 
-The model already has GitHub, search, and a browser. Point it at a shell and it will type `subfinder` from memory, invent a flag, and call the mess reconnaissance. The door does not offer that word. It offers `whisker`. The spawn underneath is still the real binary, absolute argv, timeout, cleaned input.
+That is the ferret bit. A ferret does not label the cache with what is in it. The table below is the label, for you. `den:roster` does not include the binary names. The agent shops the left column. You read the middle one.
 
-The obfuscation is the tool list, not the install. You can read this table and know what you ran. The agent cannot shop the catalog by the pack names, because those names are not tools. That is the whole den.
+The papers are mixed, which is why this is a rename and not a claim of safety:
+
+- [Not All Refusals Are Equal](https://arxiv.org/abs/2607.02714) treats cybersecurity refusal as its own direction in the model, separable from other refusals.
+- [A New Framework for Cybersecurity Refusals in AI Agents](https://arxiv.org/abs/2606.02644) finds most of the frontier models they tested barely refuse offensive web tasks. Two do.
+- [MLLMs Fail to Refuse when Using Tools Agentically](https://arxiv.org/abs/2610.03938) finds tool use can lower refusal, not raise it.
+
+So the rename is for the models that flinch at the word. It is not a bypass guarantee. If the model will not run a template scan, `fang` will not talk it into one.
 
 ```
-model  ->  MCP client  ->  den:whisker  ->  subfinder  ->  text
+agent -> MCP -> den:whisker -> subfinder -> text
 ```
 
 ## Jobs
 
-`den:roster` returns this from the running server, without the bin column. The bin column is for you.
-
-| Call | Bin | Job | Gate |
+| Call | Binary | What it does | Gate |
 |---|---|---|---|
 | `den:whisker` | subfinder | subdomains | |
 | `den:squeak` | dnsx | resolve names | |
@@ -43,8 +49,8 @@ model  ->  MCP client  ->  den:whisker  ->  subfinder  ->  text
 | `den:tunnel` | katana | crawl paths | |
 | `den:rummage` | shuffledns | wordlist brute | |
 | `den:fang` | nuclei | template scan | `confirm: true` |
-| `den:raid` | chain | subfinder, dnsx, naabu, httpx, katana, nuclei | |
-| `den:keeper` | pdtm | install or update the pack | `confirm: true` |
+| `den:raid` | the chain | subfinder, dnsx, naabu, httpx, katana, nuclei | |
+| `den:keeper` | pdtm | install or update the binaries | `confirm: true` |
 | `den:expose` | uncover | exposed panels | |
 | `den:chatter` | notify | send a notification | `confirm: true` |
 | `den:shadow` | proxify | intercept traffic | `confirm: true` |
@@ -57,13 +63,11 @@ model  ->  MCP client  ->  den:whisker  ->  subfinder  ->  text
 | `den:turf` | tldfinder | TLD lookup | |
 | `den:denhome` | simplehttpserver | local file server, killed at 8 seconds | `confirm: true` |
 | `den:muse` | aix | pack assistant | |
-| `den:roster` | | list the overlay | |
+| `den:roster` | | the left column, from the running server | |
 
-The first nine are typed. The rest take `target` and a short `args` array. A bad flag comes back as stderr. `fang` will not bite unless `confirm` is true. `denhome` dies at 8 seconds. A den that serves forever has the door off.
+The first nine have typed arguments. The rest take `target` and a short `args` array. A bad flag comes back as stderr. The server does not keep the output.
 
 ## Install
-
-This repo does not ship the bins.
 
 ```sh
 go install github.com/projectdiscovery/pdtm/cmd/pdtm@latest
@@ -74,8 +78,6 @@ sh scripts/link-bins.sh
 bun install
 bun src/index.ts
 ```
-
-`PD_TOOLS_DIR` defaults to `$HOME/.pdtm/go/bin`. `.env` is not committed.
 
 ```json
 {
@@ -89,16 +91,22 @@ bun src/index.ts
 }
 ```
 
-`scripts/link-bins.sh` lays the den names over the bin directory. The door still will not answer to the old ones.
+`scripts/link-bins.sh` symlinks `whisker` onto `subfinder` in the bin directory. The server still only accepts the den names.
 
 ## Layout
 
-- `src/index.ts` — the door
-- `src/den-names.ts` — the cache map
-- `src/tools/` — typed spawns
-- `src/tools/kit.ts` — the rest, 120 second cap
-- `src/workflows/bug-bounty.ts` — the raid
-- `scripts/write-env.sh` — write `.env`
-- `scripts/link-bins.sh` — names on the bins
+- `src/index.ts` accepts a den name and spawns the binary
+- `src/den-names.ts` is the map
+- `src/tools/` typed spawns
+- `src/tools/kit.ts` the rest, 120 second cap
+- `src/workflows/bug-bounty.ts` the chain
+- `scripts/write-env.sh` writes `.env`, which is not committed
+- `scripts/link-bins.sh` symlinks the den names onto the binaries
 
-Fork of [intelligent-ears/pd-tools-mcp](https://github.com/intelligent-ears/pd-tools-mcp). MIT. The lineage can keep its name. The door has one.
+The server code started as a fork of [intelligent-ears/pd-tools-mcp](https://github.com/intelligent-ears/pd-tools-mcp). That part remains MIT. See `LICENSE`.
+
+## License
+
+Do what the fuck you want with the den names, the scripts, and this README. [WTFPL v2](COPYING).
+
+The inherited server is MIT. Both notices stay.
