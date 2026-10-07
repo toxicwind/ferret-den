@@ -1,30 +1,15 @@
 # ferret-den
 
-MCP server for the ProjectDiscovery bins. One process, eight tools, no shell.
+The den is an overlay. Callers ask a ferret to do a job. They never see the pack underneath.
 
-stdio JSON-RPC with Content-Length framing. Spawns are absolute argv. Timeouts are per tool. Input is cleaned before it reaches a bin.
+One MCP process. stdio JSON-RPC. Spawns are absolute argv, no shell. Input is cleaned before it reaches a bin. Timeouts are per job.
 
-## Configure
-
-Copy `.env.example` to `.env`. Empty values use `$HOME/.pdtm/go/bin`.
-
-## Install
-
-```sh
-go install github.com/projectdiscovery/pdtm/cmd/pdtm@latest
-./ferret install
-bun install
-bun src/index.ts
-```
-
-`PD_TOOLS_DIR` is the bin directory. Default `$HOME/.pdtm/go/bin`. `PD_<NAME>_BIN` overrides one tool. `SHUFFLEDNS_BIN` overrides shuffledns.
-
-## Client
+Register the server as `den`.
 
 ```json
 {
   "mcpServers": {
-    "ferret-den": {
+    "den": {
       "command": "bun",
       "args": ["src/index.ts"],
       "env": { "PD_TOOLS_DIR": "$HOME/.pdtm/go/bin" }
@@ -33,58 +18,52 @@ bun src/index.ts
 }
 ```
 
-## den: names
+## Overlay
 
-The server name is `den`. Call `den:whisker`, not `pd:subfinder`. Old bin names and `pd_` names still resolve.
+| Call | Job |
+|---|---|
+| `den:whisker` | sniff out subdomains |
+| `den:squeak` | call a name and read the answer |
+| `den:nose` | nose a host for a live page |
+| `den:padlock` | check the lock, cert, and cipher |
+| `den:scratch` | scratch doors for open ports |
+| `den:tunnel` | run the tunnels and list paths |
+| `den:rummage` | rummage a wordlist for names |
+| `den:fang` | bite with templates. `confirm: true` required |
+| `den:raid` | full raid: sniff, call, scratch, nose, tunnel, bite |
+| `den:keeper` | keep the pack installed |
+| `den:expose` | turn over exposed panels |
+| `den:chatter` | carry a message out of the den |
+| `den:shadow` | sit in the path and watch traffic |
+| `den:scatter` | pull the scattered name set |
+| `den:cloak` | see if a host is wearing a cloak |
+| `den:range` | map the range |
+| `den:mutate` | mutate a name into more names |
+| `den:warren` | map the warren |
+| `den:cloudkit` | list the kits stashed in cloud |
+| `den:turf` | find the turf a name sits on |
+| `den:denhome` | serve the den on a local port |
+| `den:muse` | ask the den muse |
+| `den:roster` | list the overlay |
 
-| den | bin | job |
-|---|---|---|
-| whisker | subfinder | sniff out subdomains |
-| squeak | dnsx | call a name |
-| nose | httpx | nose a live page |
-| padlock | tlsx | check the lock |
-| scratch | naabu | scratch for open ports |
-| tunnel | katana | run the paths |
-| rummage | shuffledns | rummage a wordlist |
-| fang | nuclei | bite with templates, confirm required |
-| raid | workflow | full den raid |
-| keeper | pdtm | keep the bins |
-| expose | uncover | turn over exposed panels |
-| chatter | notify | carry a message |
-| shadow | proxify | sit in the path |
-| scatter | chaos | chaos name set |
-| cloak | cdncheck | CDN cloak |
-| range | asnmap | ASN range |
-| mutate | alterx | mutate names |
-| warren | mapcidr | CIDR warren |
-| cloudkit | cloudlist | cloud kits |
-| turf | tldfinder | name turf |
-| denhome | simplehttpserver | local den |
-| muse | aix | den muse |
+`scripts/link-bins.sh` lays the same names over the bin directory. The overlay names are the only surface.
 
-`scripts/link-bins.sh` symlinks those names onto the real bins in `$PD_TOOLS_DIR`.
+## Install
 
-## Tools
+```sh
+cp .env.example .env
+bun install
+bun src/index.ts
+```
 
-| Tool | Bin | Timeout |
-|---|---|---|
-| subfinder | subfinder | 5 min |
-| dnsx | dnsx | 5 min |
-| httpx | httpx | 5 min |
-| tlsx | tlsx | 5 min |
-| naabu | naabu | 10 min |
-| katana | katana | 10 min |
-| shuffledns | shuffledns | 10 min |
-| nuclei | nuclei | 15 min |
-
-`bug_bounty_workflow` runs the chain. `./ferret pull` is `pdtm -update-all`. Templates are a separate pull: `nuclei -update-templates`.
+`PD_TOOLS_DIR` is the bin directory. Default `$HOME/.pdtm/go/bin`.
 
 ## Layout
 
-- `src/index.ts` — MCP server
-- `src/tools/` — one file per bin
-- `src/workflows/bug-bounty.ts` — the chain
-- `den-call.ts` — direct caller
-- `AGENTS.md` — timeouts and path rules
+- `src/index.ts` — the door
+- `src/den-names.ts` — the overlay
+- `src/tools/` — one spawn per job
+- `src/workflows/bug-bounty.ts` — the raid
+- `scripts/link-bins.sh` — names on the bin directory
 
-Lineage: hardened fork of [intelligent-ears/pd-tools-mcp](https://github.com/intelligent-ears/pd-tools-mcp), MIT. Bins stay upstream.
+Lineage: hardened fork of [intelligent-ears/pd-tools-mcp](https://github.com/intelligent-ears/pd-tools-mcp), MIT.

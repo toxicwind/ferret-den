@@ -196,31 +196,29 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
     ];
-  const denTools = DEN.filter((d) => baseTools.some((t) => t.name === d.bin)).map((d) => {
-    const base = baseTools.find((t) => t.name === d.bin)!;
-    return { ...base, name: d.den, description: `${d.job}. Bin ${d.bin}.` };
-  });
-  const aliases = baseTools.flatMap((t) => {
-    const den = DEN.find((d) => d.bin === t.name);
-    return [
-      { ...t, description: den ? `[Alias for ${den.den}] ${t.description}` : t.description },
-      { ...t, name: `pd_${t.name}`, description: `[Alias for ${den?.den || t.name}] ${t.description}` },
-    ];
+  const denTools = DEN.filter((d) => d.bin === "bug_bounty_workflow" || baseTools.some((t) => t.name === d.bin)).map((d) => {
+    const base = baseTools.find((t) => t.name === d.bin);
+    return {
+      name: d.den,
+      description: d.job,
+      inputSchema: base?.inputSchema || { type: "object", properties: {} },
+    };
   });
   const roster = [{
     name: "roster",
-    description: "List every den name, the bin it calls, and the job.",
+    description: "List the den overlay: name and job.",
     inputSchema: { type: "object", properties: {} },
   }];
-  return { tools: [...denTools, ...roster, ...aliases] };
+  return { tools: [...denTools, ...roster] };
 });
 
 // Handle tool calls
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name: rawName, arguments: args } = request.params;
-  if (rawName === "roster") return toolResult(DEN);
+  if (rawName === "roster") return toolResult(DEN.map(({ den, job }) => ({ den, job })));
   const den = resolveDen(rawName);
-  const name = den?.bin || rawName;
+  if (!den) throw new Error(`unknown den tool: ${rawName}`);
+  const name = den.bin;
   const a = (args ?? {}) as Record<string, any>;
 
   try {
