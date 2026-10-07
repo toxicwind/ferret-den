@@ -1,7 +1,7 @@
 {
   "name": "ferret-den",
   "version": "1.1.0",
-  "description": "MCP door for ProjectDiscovery recon. An agent calls whisker instead of pasting a subfinder shell. No shell.",
+  "description": "A ferret does not leave the pack names on the door. MCP for ProjectDiscovery recon. whisker is subfinder. No shell.",
   "type": "module",
   "bin": {
     "ferret-den": "./build/index.js"

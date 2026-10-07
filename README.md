@@ -2,34 +2,36 @@
 
 # ferret-den
 
-MCP door so an agent can run ProjectDiscovery recon without a shell.
+A ferret does not leave the pack names on the door.
 
 [![license](https://img.shields.io/github/license/toxicwind/ferret-den?style=for-the-badge)](LICENSE)
 [![stars](https://img.shields.io/github/stars/toxicwind/ferret-den?style=for-the-badge)](https://github.com/toxicwind/ferret-den/stargazers)
 [![jobs](https://img.shields.io/badge/jobs-22-c45c26?style=for-the-badge)](https://github.com/toxicwind/ferret-den)
 [![shell](https://img.shields.io/badge/shell-none-2f6f4e?style=for-the-badge)](https://github.com/toxicwind/ferret-den)
 
-For an agent that already has GitHub, search, and a browser, and still cannot enumerate a domain without you pasting a shell string.
+MCP server for the ProjectDiscovery recon bins. The agent calls a den job. The server spawns the bin. No shell.
 
-[Jobs](#jobs) · [Install](#install) · [Why](#why)
+[Why the names](#why-the-names) · [Jobs](#jobs) · [Install](#install)
 
 </div>
 
-> You want subfinder, httpx, and nuclei on the tool bus. You do not want the model inventing flags. ferret-den is that bus stop. `whisker` is subfinder. `fang` is nuclei. The bins still come from pdtm.
+> You are downloading a door. The scanners still come from [pdtm](https://github.com/projectdiscovery/pdtm). `whisker` is subfinder. `fang` is nuclei. If that sentence is enough, skip the lore.
 
-## Why
+## Why the names
 
-- The model picks a job. The server spawns the binary. Absolute argv, timeout, no shell.
-- The den names are the only tool list. The ProjectDiscovery names stay in the table below so you know what you installed.
-- `fang` will not run unless you pass `confirm: true`. Output is not stored here. The client keeps it.
+A ferret caches food where the casual walker will not look. Same trick.
+
+The model already has GitHub, search, and a browser. Point it at a shell and it will type `subfinder` from memory, invent a flag, and call the mess reconnaissance. The door does not offer that word. It offers `whisker`. The spawn underneath is still the real binary, absolute argv, timeout, cleaned input.
+
+The obfuscation is the tool list, not the install. You can read this table and know what you ran. The agent cannot shop the catalog by the pack names, because those names are not tools. That is the whole den.
 
 ```
-model  ->  MCP client  ->  den  ->  pdtm bin  ->  text
+model  ->  MCP client  ->  den:whisker  ->  subfinder  ->  text
 ```
 
 ## Jobs
 
-`den:roster` returns this list from the running server.
+`den:roster` returns this from the running server, without the bin column. The bin column is for you.
 
 | Call | Bin | Job | Gate |
 |---|---|---|---|
@@ -57,11 +59,11 @@ model  ->  MCP client  ->  den  ->  pdtm bin  ->  text
 | `den:muse` | aix | pack assistant | |
 | `den:roster` | | list the overlay | |
 
-The first nine are typed. The rest take `target` and a short `args` array. Args are cleaned. There is no shell.
+The first nine are typed. The rest take `target` and a short `args` array. A bad flag comes back as stderr. `fang` will not bite unless `confirm` is true. `denhome` dies at 8 seconds. A den that serves forever has the door off.
 
 ## Install
 
-You need the bins. This repo does not ship them.
+This repo does not ship the bins.
 
 ```sh
 go install github.com/projectdiscovery/pdtm/cmd/pdtm@latest
@@ -87,23 +89,16 @@ bun src/index.ts
 }
 ```
 
-`scripts/link-bins.sh` symlinks the den names onto those bins. The door still only accepts the den names.
-
-## Limits
-
-- Kit jobs are a cleaned argv pass. A bad flag comes back as stderr.
-- `denhome` cannot stay up. The timeout is 8 seconds.
-- `fang` does not run unless `confirm` is true.
-- The server does not store output.
+`scripts/link-bins.sh` lays the den names over the bin directory. The door still will not answer to the old ones.
 
 ## Layout
 
 - `src/index.ts` — the door
-- `src/den-names.ts` — den name to bin
+- `src/den-names.ts` — the cache map
 - `src/tools/` — typed spawns
 - `src/tools/kit.ts` — the rest, 120 second cap
 - `src/workflows/bug-bounty.ts` — the raid
 - `scripts/write-env.sh` — write `.env`
-- `scripts/link-bins.sh` — den names on the bin directory
+- `scripts/link-bins.sh` — names on the bins
 
-Fork of [intelligent-ears/pd-tools-mcp](https://github.com/intelligent-ears/pd-tools-mcp). MIT.
+Fork of [intelligent-ears/pd-tools-mcp](https://github.com/intelligent-ears/pd-tools-mcp). MIT. The lineage can keep its name. The door has one.
