@@ -1,7 +1,7 @@
 {
   "name": "ferret-den",
   "version": "1.1.0",
-  "description": "The model has a browser. It does not have a snout. stdio MCP door for the recon pack.",
+  "description": "MCP server for the ProjectDiscovery recon bins. Agents call den jobs. whisker is subfinder, fang is nuclei. No shell.",
   "type": "module",
   "bin": {
     "ferret-den": "./build/index.js"

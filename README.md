@@ -5,58 +5,61 @@
 [![shell](https://img.shields.io/badge/shell-none-2f6f4e?style=for-the-badge)](https://github.com/toxicwind/ferret-den)
 [![license](https://img.shields.io/badge/license-MIT-555555?style=for-the-badge)](LICENSE)
 
-The model has GitHub. The model has search. The model has a browser. The model does not have a snout.
+MCP server for the ProjectDiscovery recon bins. An agent calls a den job. The server spawns the matching binary. Absolute argv, timeouts, no shell.
 
-Give it a shell and it will invent flags, quote nothing, and call that reconnaissance. ferret-den is the door you put in front of the pack so the model asks for a job and gets a spawn. Absolute argv. Timeouts. No shell. The pack names stay under the floorboards, which is where a ferret keeps anything worth having.
+You are downloading a door, not a scanner. The bins still come from [pdtm](https://github.com/projectdiscovery/pdtm) and live in `$HOME/.pdtm/go/bin`. ferret-den is the overlay: `whisker` is subfinder, `fang` is nuclei, and the old names are not on the tool list.
 
 ```
-model  ->  MCP client  ->  den  ->  binary  ->  a pile of text
+model  ->  MCP client  ->  den  ->  ProjectDiscovery bin  ->  text
 ```
 
-Register the server as `den`. If you register it as anything else you have missed the bit.
+Register the server as `den`.
 
-## The jobs
+## Jobs
 
-`den:roster` will recite this if you do not trust the README. Correct instinct.
+`den:roster` returns this list from the running server.
 
-| Call | What the ferret actually does | Do not skip |
-|---|---|---|
-| `den:whisker` | sniffs out subdomains | |
-| `den:squeak` | calls a name and reads who answers | |
-| `den:nose` | noses a host for a live page | |
-| `den:padlock` | checks the lock, the cert, the cipher | |
-| `den:scratch` | scratches the doors for open ports | |
-| `den:tunnel` | runs the tunnels and lists the paths | |
-| `den:rummage` | rummages a wordlist | |
-| `den:fang` | bites with templates | `confirm: true` or it will not |
-| `den:raid` | the whole stupid chain | |
-| `den:keeper` | keeps the pack installed | `confirm: true` |
-| `den:expose` | turns over exposed panels | |
-| `den:chatter` | carries a message out of the den | `confirm: true` |
-| `den:shadow` | sits in the path and watches | `confirm: true` |
-| `den:scatter` | pulls the scattered name set | |
-| `den:cloak` | checks if the host is wearing a cloak | |
-| `den:range` | maps the range | |
-| `den:mutate` | mutates a name into more names | |
-| `den:warren` | maps the warren | |
-| `den:cloudkit` | lists the kits stashed in cloud | |
-| `den:turf` | finds the turf a name sits on | |
-| `den:denhome` | serves the den, then gets killed at 8 seconds | `confirm: true` |
-| `den:muse` | ask the muse. it might even answer | |
+| Call | Bin | Job | Gate |
+|---|---|---|---|
+| `den:whisker` | subfinder | subdomains | |
+| `den:squeak` | dnsx | resolve names | |
+| `den:nose` | httpx | probe live HTTP | |
+| `den:padlock` | tlsx | TLS version, cipher, cert | |
+| `den:scratch` | naabu | open ports | |
+| `den:tunnel` | katana | crawl paths | |
+| `den:rummage` | shuffledns | wordlist brute | |
+| `den:fang` | nuclei | template scan | `confirm: true` |
+| `den:raid` | chain | subfinder, dnsx, naabu, httpx, katana, nuclei | |
+| `den:keeper` | pdtm | install or update the pack | `confirm: true` |
+| `den:expose` | uncover | exposed panels | |
+| `den:chatter` | notify | send a notification | `confirm: true` |
+| `den:shadow` | proxify | intercept traffic | `confirm: true` |
+| `den:scatter` | chaos | dataset names | |
+| `den:cloak` | cdncheck | CDN check | |
+| `den:range` | asnmap | ASN range | |
+| `den:mutate` | alterx | name permutations | |
+| `den:warren` | mapcidr | CIDR map | |
+| `den:cloudkit` | cloudlist | cloud assets | |
+| `den:turf` | tldfinder | TLD lookup | |
+| `den:denhome` | simplehttpserver | local file server, killed at 8 seconds | `confirm: true` |
+| `den:muse` | aix | pack assistant | |
+| `den:roster` | | list the overlay | |
 
-The first nine are typed. The rest take `target` and a short `args` list. Args are cleaned. There is still no shell. `denhome` cannot stay up. That is not a bug. A den that serves forever is a burrow with the door off.
+The first nine are typed. The rest take `target` and a short `args` array. Args are cleaned. There is no shell.
 
 ## Install
 
-Bins live in `$PD_TOOLS_DIR`. Default `$HOME/.pdtm/go/bin`. The directory is a configuration. It is not the name of the door.
-
 ```sh
+go install github.com/projectdiscovery/pdtm/cmd/pdtm@latest
+pdtm -install-all
 cp .env.example .env
 sh scripts/write-env.sh
 sh scripts/link-bins.sh
 bun install
 bun src/index.ts
 ```
+
+`PD_TOOLS_DIR` defaults to `$HOME/.pdtm/go/bin`. `.env` is not committed.
 
 ```json
 {
@@ -70,23 +73,23 @@ bun src/index.ts
 }
 ```
 
-`scripts/link-bins.sh` lays the same names over the bin directory. The door still will not answer to the old ones. That was the point.
+`scripts/link-bins.sh` symlinks the den names onto those bins. The door still only accepts the den names.
 
-## What it will not do
+## Limits
 
-- It will not remember the last raid. The client keeps the pile.
-- It will not run `fang` because you sounded sure.
-- It will not grow a typed flag set for `muse`. Kit jobs return stderr when you guess.
-- It will not become a model. The model is the thing that got lost and knocked.
+- Kit jobs are a cleaned argv pass. A bad flag comes back as stderr.
+- `denhome` cannot stay up. The timeout is 8 seconds.
+- `fang` does not run unless `confirm` is true.
+- The server does not store output.
 
 ## Layout
 
 - `src/index.ts` — the door
-- `src/den-names.ts` — the names on the door
+- `src/den-names.ts` — den name to bin
 - `src/tools/` — typed spawns
-- `src/tools/kit.ts` — the rest of the pack, cleaned argv, 120 seconds
+- `src/tools/kit.ts` — the rest, 120 second cap
 - `src/workflows/bug-bounty.ts` — the raid
-- `scripts/write-env.sh` — writes `.env`, which is not committed
-- `scripts/link-bins.sh` — names on the bin directory
+- `scripts/write-env.sh` — write `.env`
+- `scripts/link-bins.sh` — den names on the bin directory
 
-Fork of [intelligent-ears/pd-tools-mcp](https://github.com/intelligent-ears/pd-tools-mcp). MIT. The lineage can keep its own name. The door has one.
+Fork of [intelligent-ears/pd-tools-mcp](https://github.com/intelligent-ears/pd-tools-mcp). MIT.
