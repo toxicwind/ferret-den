@@ -4,6 +4,10 @@ MCP server for the ProjectDiscovery bins. One process, eight tools, no shell.
 
 stdio JSON-RPC with Content-Length framing. Spawns are absolute argv. Timeouts are per tool. Input is cleaned before it reaches a bin.
 
+## Configure
+
+Copy `.env.example` to `.env`. Empty values use `$HOME/.pdtm/go/bin`.
+
 ## Install
 
 ```sh
@@ -13,7 +17,7 @@ bun install
 bun src/index.ts
 ```
 
-`PD_TOOLS_DIR` is the bin directory. Default `/home/toxic/.pdtm/go/bin`. `PD_<NAME>_BIN` overrides one tool. `SHUFFLEDNS_BIN` overrides shuffledns.
+`PD_TOOLS_DIR` is the bin directory. Default `$HOME/.pdtm/go/bin`. `PD_<NAME>_BIN` overrides one tool. `SHUFFLEDNS_BIN` overrides shuffledns.
 
 ## Client
 
@@ -23,7 +27,7 @@ bun src/index.ts
     "ferret-den": {
       "command": "bun",
       "args": ["src/index.ts"],
-      "env": { "PD_TOOLS_DIR": "/home/toxic/.pdtm/go/bin" }
+      "env": { "PD_TOOLS_DIR": "$HOME/.pdtm/go/bin" }
     }
   }
 }

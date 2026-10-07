@@ -4,14 +4,17 @@ import { join } from "path";
 
 // ---------------------------------------------------------------------------
 // Binary resolution — estate-aware.
-// PD_TOOLS_DIR defaults to the yote pdtm install; SHUFFLEDNS_BIN to the
+// PD_TOOLS_DIR defaults to $HOME/.pdtm/go/bin; SHUFFLEDNS_BIN to that dir.
 // separate yote go/bin path. Per-binary override: PD_<NAME>_BIN
 // (e.g. PD_HTTPX_BIN=/custom/path/httpx).
 // ---------------------------------------------------------------------------
+function home(): string {
+  return process.env.HOME || process.env.USERPROFILE || ".";
+}
 export const PD_TOOLS_DIR =
-  process.env.PD_TOOLS_DIR || "/home/toxic/.pdtm/go/bin";
+  process.env.PD_TOOLS_DIR || `${home()}/.pdtm/go/bin`;
 export const SHUFFLEDNS_BIN =
-  process.env.SHUFFLEDNS_BIN || "/home/toxic/go/bin/shuffledns";
+  process.env.SHUFFLEDNS_BIN || `${PD_TOOLS_DIR}/shuffledns`;
 
 const binCache = new Map<string, string>();
 

@@ -40,8 +40,8 @@ Binaries are resolved at startup, not on PATH:
 
 | Variable | Default |
 |---|---|
-| `PD_TOOLS_DIR` | `/home/toxic/.pdtm/go/bin` |
-| `SHUFFLEDNS_BIN` | `/home/toxic/go/bin/shuffledns` |
+| `PD_TOOLS_DIR` | `$HOME/.pdtm/go/bin` |
+| `SHUFFLEDNS_BIN` | `$HOME/.pdtm/go/bin/shuffledns` |
 | `PD_<NAME>_BIN` | per-binary override, e.g. `PD_HTTPX_BIN=/opt/httpx` |
 
 The server validates all 8 binaries at launch and exits naming what's

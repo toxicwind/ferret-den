@@ -34,8 +34,8 @@ function sanitizeDomain(d: unknown): string {
 }
 
 // ferret-den MCP server. Hardened fork of intelligent-ears/pd-tools-mcp (MIT).
-// Binaries resolve via PD_TOOLS_DIR (/home/toxic/.pdtm/go/bin) and
-// SHUFFLEDNS_BIN (/home/toxic/go/bin/shuffledns); per-binary override
+// Binaries resolve via PD_TOOLS_DIR ($HOME/.pdtm/go/bin) and
+// SHUFFLEDNS_BIN ($HOME/.pdtm/go/bin/shuffledns); per-binary override
 // PD_<NAME>_BIN. All spawns are absolute-path argv, no shell, with timeouts.
 
 const server = new Server(

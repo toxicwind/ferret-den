@@ -18,14 +18,14 @@ import { join } from "node:path";
 // ---------------------------------------------------------------- binaries
 
 const BINARIES: Record<string, string> = {
-  pd_httpx: "/home/toxic/.pdtm/go/bin/httpx",
-  pd_dnsx: "/home/toxic/.pdtm/go/bin/dnsx",
-  pd_shuffledns: "/home/toxic/go/bin/shuffledns",
-  pd_subfinder: "/home/toxic/.pdtm/go/bin/subfinder",
-  pd_naabu: "/home/toxic/.pdtm/go/bin/naabu",
-  pd_nuclei: "/home/toxic/.pdtm/go/bin/nuclei",
-  pd_katana: "/home/toxic/.pdtm/go/bin/katana",
-  pd_tlsx: "/home/toxic/.pdtm/go/bin/tlsx",
+  pd_httpx: "$HOME/.pdtm/go/bin/httpx",
+  pd_dnsx: "$HOME/.pdtm/go/bin/dnsx",
+  pd_shuffledns: "$HOME/.pdtm/go/bin/shuffledns",
+  pd_subfinder: "$HOME/.pdtm/go/bin/subfinder",
+  pd_naabu: "$HOME/.pdtm/go/bin/naabu",
+  pd_nuclei: "$HOME/.pdtm/go/bin/nuclei",
+  pd_katana: "$HOME/.pdtm/go/bin/katana",
+  pd_tlsx: "$HOME/.pdtm/go/bin/tlsx",
 };
 
 const DEFAULT_TIMEOUT_SEC: Record<string, number> = {

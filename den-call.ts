@@ -6,7 +6,7 @@ const server = spawn("bun", ["src/index.ts"], {
    cwd: import.meta.dir,
  server.kill(); process.exit(0);
   stdio: ["pipe", "pipe", "inherit"],
-  env: { ...process.env, PD_TOOLS_DIR: "/home/toxic/.pdtm/go/bin" },
+  env: { ...process.env, PD_TOOLS_DIR: "$HOME/.pdtm/go/bin" },
 });
 let buf = ""; let id = 0;
 const pending = new Map<number, (v: any) => void>();
