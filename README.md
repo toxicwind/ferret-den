@@ -1,12 +1,21 @@
-# ferret-den
+<div align="center">
 
-![A ferret in the trash pulls out a scrap labeled subfinder. The door only says whisker.](docs/header.svg)
+# ferret-den
 
 An MCP server that exposes ProjectDiscovery reconnaissance binaries under decoupled tool names to prevent false-positive model refusals.
 
-`den:whisker` runs `subfinder`. `den:fang` runs `nuclei`. The connected LLM agent sees functional capabilities and structured schemas, but the canonical binary names never appear in the tool catalog.
+[![WTFPL](https://img.shields.io/badge/license-WTFPL-111111?style=for-the-badge)](COPYING)
+[![jobs](https://img.shields.io/badge/jobs-22-c45c26?style=for-the-badge)](#jobs)
+[![shell](https://img.shields.io/badge/shell-none-2f6f4e?style=for-the-badge)](#architecture--safety)
+[![stdio](https://img.shields.io/badge/transport-stdio-555555?style=for-the-badge)](#installation)
+
+`den:whisker` runs `subfinder`. `den:fang` runs `nuclei`. The agent sees the job. The binary name stays out of the catalog.
 
 [Why the Names](#why-the-names) · [Architecture & Safety](#architecture--safety) · [Jobs](#jobs) · [Installation](#installation) · [Configuration](#configuration) · [License](#license)
+
+</div>
+
+![A ferret in the trash pulls out a scrap labeled subfinder. The door only says whisker.](docs/header.svg)
 
 ---
 
