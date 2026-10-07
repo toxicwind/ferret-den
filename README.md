@@ -1,19 +1,31 @@
+<div align="center">
+
 # ferret-den
 
-[![den](https://img.shields.io/badge/door-den-111111?style=for-the-badge)](https://github.com/toxicwind/ferret-den)
+MCP door so an agent can run ProjectDiscovery recon without a shell.
+
+[![license](https://img.shields.io/github/license/toxicwind/ferret-den?style=for-the-badge)](LICENSE)
+[![stars](https://img.shields.io/github/stars/toxicwind/ferret-den?style=for-the-badge)](https://github.com/toxicwind/ferret-den/stargazers)
 [![jobs](https://img.shields.io/badge/jobs-22-c45c26?style=for-the-badge)](https://github.com/toxicwind/ferret-den)
 [![shell](https://img.shields.io/badge/shell-none-2f6f4e?style=for-the-badge)](https://github.com/toxicwind/ferret-den)
-[![license](https://img.shields.io/badge/license-MIT-555555?style=for-the-badge)](LICENSE)
 
-MCP server for the ProjectDiscovery recon bins. An agent calls a den job. The server spawns the matching binary. Absolute argv, timeouts, no shell.
+For an agent that already has GitHub, search, and a browser, and still cannot enumerate a domain without you pasting a shell string.
 
-You are downloading a door, not a scanner. The bins still come from [pdtm](https://github.com/projectdiscovery/pdtm) and live in `$HOME/.pdtm/go/bin`. ferret-den is the overlay: `whisker` is subfinder, `fang` is nuclei, and the old names are not on the tool list.
+[Jobs](#jobs) · [Install](#install) · [Why](#why)
+
+</div>
+
+> You want subfinder, httpx, and nuclei on the tool bus. You do not want the model inventing flags. ferret-den is that bus stop. `whisker` is subfinder. `fang` is nuclei. The bins still come from pdtm.
+
+## Why
+
+- The model picks a job. The server spawns the binary. Absolute argv, timeout, no shell.
+- The den names are the only tool list. The ProjectDiscovery names stay in the table below so you know what you installed.
+- `fang` will not run unless you pass `confirm: true`. Output is not stored here. The client keeps it.
 
 ```
-model  ->  MCP client  ->  den  ->  ProjectDiscovery bin  ->  text
+model  ->  MCP client  ->  den  ->  pdtm bin  ->  text
 ```
-
-Register the server as `den`.
 
 ## Jobs
 
@@ -48,6 +60,8 @@ Register the server as `den`.
 The first nine are typed. The rest take `target` and a short `args` array. Args are cleaned. There is no shell.
 
 ## Install
+
+You need the bins. This repo does not ship them.
 
 ```sh
 go install github.com/projectdiscovery/pdtm/cmd/pdtm@latest
