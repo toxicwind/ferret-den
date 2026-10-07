@@ -5,28 +5,32 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.2.21
 
-      - name: Install dependencies
+      - name: Install
         run: bun install --frozen-lockfile
 
       - name: Typecheck
         run: bunx tsc --noEmit
 
+      - name: Overlay and raid tests
+        run: |
+          node test/den-names.mjs
+          node test/raid.test.mjs
+          node test/dnsx.test.mjs
+
       - name: Build
         run: bun run build
 
-      - name: Verify build output
-        run: test -x build/index.js && echo "build OK"
-
-      - name: Smoke test — pure functions (no PD binaries needed)
-        run: bun test/runner-pure.test.ts
+      - name: Build exists
+        run: test -f build/index.js

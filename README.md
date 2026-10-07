@@ -4,6 +4,7 @@
 
 An MCP server that exposes ProjectDiscovery reconnaissance binaries under decoupled tool names to prevent false-positive model refusals.
 
+[![CI](https://img.shields.io/github/actions/workflow/status/toxicwind/ferret-den/ci.yml?style=for-the-badge&label=ci)](https://github.com/toxicwind/ferret-den/actions/workflows/ci.yml)
 [![WTFPL](https://img.shields.io/badge/license-WTFPL-111111?style=for-the-badge)](COPYING)
 [![jobs](https://img.shields.io/badge/jobs-22-c45c26?style=for-the-badge)](#jobs)
 [![shell](https://img.shields.io/badge/shell-none-2f6f4e?style=for-the-badge)](#architecture--safety)
