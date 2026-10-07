@@ -16,6 +16,7 @@ import { executeTlsx } from "./tools/tlsx.js";
 import { executeShuffledns } from "./tools/shuffledns.js";
 import { runBugBountyWorkflow } from "./workflows/bug-bounty.js";
 import { cleanDomain, cleanList, cleanPortSpec, withHeavyGate, checkAllBinaries } from "./tools/runner.js";
+import { DEN, resolveDen } from "./den-names.js";
 
 function toList(input: unknown): string[] {
   if (Array.isArray(input)) return cleanList(input);
@@ -40,8 +41,8 @@ function sanitizeDomain(d: unknown): string {
 
 const server = new Server(
   {
-    name: "ferret-den",
-    version: "1.1.0",
+    name: "den",
+    version: "1.2.0",
   },
   {
     capabilities: {
@@ -195,21 +196,31 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
     ];
-  const allTools = baseTools.flatMap((t) => [
-    t,
-    {
-      ...t,
-      name: `pd_${t.name}`,
-      description: `[Alias for ${t.name}] ${t.description}`,
-    },
-  ]);
-  return { tools: allTools };
+  const denTools = DEN.filter((d) => baseTools.some((t) => t.name === d.bin)).map((d) => {
+    const base = baseTools.find((t) => t.name === d.bin)!;
+    return { ...base, name: d.den, description: `${d.job}. Bin ${d.bin}.` };
+  });
+  const aliases = baseTools.flatMap((t) => {
+    const den = DEN.find((d) => d.bin === t.name);
+    return [
+      { ...t, description: den ? `[Alias for ${den.den}] ${t.description}` : t.description },
+      { ...t, name: `pd_${t.name}`, description: `[Alias for ${den?.den || t.name}] ${t.description}` },
+    ];
+  });
+  const roster = [{
+    name: "roster",
+    description: "List every den name, the bin it calls, and the job.",
+    inputSchema: { type: "object", properties: {} },
+  }];
+  return { tools: [...denTools, ...roster, ...aliases] };
 });
 
 // Handle tool calls
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name: rawName, arguments: args } = request.params;
-  const name = rawName.startsWith("pd_") ? rawName.slice(3) : rawName;
+  if (rawName === "roster") return toolResult(DEN);
+  const den = resolveDen(rawName);
+  const name = den?.bin || rawName;
   const a = (args ?? {}) as Record<string, any>;
 
   try {

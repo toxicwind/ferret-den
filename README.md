@@ -33,6 +33,37 @@ bun src/index.ts
 }
 ```
 
+## den: names
+
+The server name is `den`. Call `den:whisker`, not `pd:subfinder`. Old bin names and `pd_` names still resolve.
+
+| den | bin | job |
+|---|---|---|
+| whisker | subfinder | sniff out subdomains |
+| squeak | dnsx | call a name |
+| nose | httpx | nose a live page |
+| padlock | tlsx | check the lock |
+| scratch | naabu | scratch for open ports |
+| tunnel | katana | run the paths |
+| rummage | shuffledns | rummage a wordlist |
+| fang | nuclei | bite with templates, confirm required |
+| raid | workflow | full den raid |
+| keeper | pdtm | keep the bins |
+| expose | uncover | turn over exposed panels |
+| chatter | notify | carry a message |
+| shadow | proxify | sit in the path |
+| scatter | chaos | chaos name set |
+| cloak | cdncheck | CDN cloak |
+| range | asnmap | ASN range |
+| mutate | alterx | mutate names |
+| warren | mapcidr | CIDR warren |
+| cloudkit | cloudlist | cloud kits |
+| turf | tldfinder | name turf |
+| denhome | simplehttpserver | local den |
+| muse | aix | den muse |
+
+`scripts/link-bins.sh` symlinks those names onto the real bins in `$PD_TOOLS_DIR`.
+
 ## Tools
 
 | Tool | Bin | Timeout |

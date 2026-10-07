@@ -1,0 +1,10 @@
+import { readFileSync } from "fs";
+const text = readFileSync(new URL("../src/den-names.ts", import.meta.url), "utf8");
+const dens = [...text.matchAll(/den: "([^"]+)"/g)].map((m) => m[1]);
+const bins = [...text.matchAll(/bin: "([^"]+)"/g)].map((m) => m[1]);
+if (new Set(dens).size !== dens.length) throw new Error("duplicate den name");
+const need = ["subfinder","dnsx","httpx","tlsx","naabu","katana","shuffledns","nuclei","pdtm","uncover","notify","proxify","chaos","cdncheck","asnmap","alterx","mapcidr","cloudlist","tldfinder","simplehttpserver","aix"];
+for (const bin of need) if (!bins.includes(bin)) throw new Error("missing " + bin);
+if (!text.includes('den: "whisker"') || !text.includes('bin: "subfinder"')) throw new Error("whisker");
+if (!text.includes("gated: true")) throw new Error("fang gate");
+console.log("den-names ok", dens.length);
