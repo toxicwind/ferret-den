@@ -17,6 +17,7 @@ import { executeShuffledns } from "./tools/shuffledns.js";
 import { runBugBountyWorkflow } from "./workflows/bug-bounty.js";
 import { cleanDomain, cleanList, cleanPortSpec, withHeavyGate, checkAllBinaries } from "./tools/runner.js";
 import { DEN, resolveDen } from "./den-names.js";
+import { executeKit } from "./tools/kit.js";
 
 function toList(input: unknown): string[] {
   if (Array.isArray(input)) return cleanList(input);
@@ -198,10 +199,18 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     ];
   const denTools = DEN.filter((d) => d.bin === "bug_bounty_workflow" || baseTools.some((t) => t.name === d.bin)).map((d) => {
     const base = baseTools.find((t) => t.name === d.bin);
+    const kitSchema = {
+      type: "object",
+      properties: {
+        target: { type: "string", description: "Primary target, host, or name" },
+        args: { type: "array", items: { type: "string" }, description: "Extra argv, no shell" },
+        confirm: { type: "boolean", description: "Required for gated jobs" },
+      },
+    };
     return {
       name: d.den,
       description: d.job,
-      inputSchema: base?.inputSchema || { type: "object", properties: {} },
+      inputSchema: base?.inputSchema || kitSchema,
     };
   });
   const roster = [{
@@ -323,8 +332,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         );
       }
 
-      default:
-        throw new Error(`Unknown tool: ${rawName}`);
+      default: {
+        if (!den) throw new Error(`Unknown tool: ${rawName}`);
+        if (den.gated && a.confirm !== true) {
+          throw new Error(`${den.den} is gated: pass confirm true`);
+        }
+        return toolResult(await executeKit(den.bin, a.target ?? a.domain ?? a.host, a.args));
+      }
     }
   } catch (error) {
     return toolError(name, error);

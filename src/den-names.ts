@@ -16,10 +16,10 @@ export const DEN: DenTool[] = [
   { den: "rummage", bin: "shuffledns", job: "rummage a wordlist for names" },
   { den: "fang", bin: "nuclei", job: "bite with templates", gated: true },
   { den: "raid", bin: "bug_bounty_workflow", job: "full den raid" },
-  { den: "keeper", bin: "pdtm", job: "keep the pack installed" },
+  { den: "keeper", bin: "pdtm", job: "keep the pack installed", gated: true },
   { den: "expose", bin: "uncover", job: "turn over exposed panels" },
-  { den: "chatter", bin: "notify", job: "carry a message out of the den" },
-  { den: "shadow", bin: "proxify", job: "sit in the path and watch traffic" },
+  { den: "chatter", bin: "notify", job: "carry a message out of the den", gated: true },
+  { den: "shadow", bin: "proxify", job: "sit in the path and watch traffic", gated: true },
   { den: "scatter", bin: "chaos", job: "pull the scattered name set" },
   { den: "cloak", bin: "cdncheck", job: "see if a host is wearing a cloak" },
   { den: "range", bin: "asnmap", job: "map the range" },
@@ -27,7 +27,7 @@ export const DEN: DenTool[] = [
   { den: "warren", bin: "mapcidr", job: "map the warren" },
   { den: "cloudkit", bin: "cloudlist", job: "list the kits stashed in cloud" },
   { den: "turf", bin: "tldfinder", job: "find the turf a name sits on" },
-  { den: "denhome", bin: "simplehttpserver", job: "serve the den on a local port" },
+  { den: "denhome", bin: "simplehttpserver", job: "serve the den on a local port", gated: true },
   { den: "muse", bin: "aix", job: "ask the den muse" },
 ];
 
