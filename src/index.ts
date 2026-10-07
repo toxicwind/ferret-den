@@ -229,6 +229,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   if (!den) throw new Error(`unknown den tool: ${rawName}`);
   const name = den.bin;
   const a = (args ?? {}) as Record<string, any>;
+  if (den.gated && a.confirm !== true) {
+    throw new Error(`${den.den} is gated: pass confirm true`);
+  }
 
   try {
     switch (name) {

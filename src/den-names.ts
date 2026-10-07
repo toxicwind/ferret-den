@@ -15,7 +15,7 @@ export const DEN: DenTool[] = [
   { den: "tunnel", bin: "katana", job: "run the tunnels and list paths" },
   { den: "rummage", bin: "shuffledns", job: "rummage a wordlist for names" },
   { den: "fang", bin: "nuclei", job: "bite with templates", gated: true },
-  { den: "raid", bin: "bug_bounty_workflow", job: "full den raid" },
+  { den: "raid", bin: "bug_bounty_workflow", job: "full den raid", gated: true },
   { den: "keeper", bin: "pdtm", job: "keep the pack installed", gated: true },
   { den: "expose", bin: "uncover", job: "turn over exposed panels" },
   { den: "chatter", bin: "notify", job: "carry a message out of the den", gated: true },
