@@ -1,7 +1,7 @@
 {
   "name": "ferret-den",
   "version": "1.1.0",
-  "description": "stdio MCP server. An agent calls a recon job. The server spawns the binary. No shell.",
+  "description": "The model has a browser. It does not have a snout. stdio MCP door for the recon pack.",
   "type": "module",
   "bin": {
     "ferret-den": "./build/index.js"
