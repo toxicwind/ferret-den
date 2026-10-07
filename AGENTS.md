@@ -1,3 +1,5 @@
+# ferret-den
+
 # AGENTS.md — pd-mcp
 
 Instructions for AI agents working in this repository.

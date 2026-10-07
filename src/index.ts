@@ -33,15 +33,14 @@ function sanitizeDomain(d: unknown): string {
   return cleanDomain(s);
 }
 
-// ProjectDiscovery MCP server — estate-hardened fork of
-// intelligent-ears/pd-tools-mcp (MIT).
+// ferret-den MCP server. Hardened fork of intelligent-ears/pd-tools-mcp (MIT).
 // Binaries resolve via PD_TOOLS_DIR (/home/toxic/.pdtm/go/bin) and
 // SHUFFLEDNS_BIN (/home/toxic/go/bin/shuffledns); per-binary override
 // PD_<NAME>_BIN. All spawns are absolute-path argv, no shell, with timeouts.
 
 const server = new Server(
   {
-    name: "projectdiscovery-mcp",
+    name: "ferret-den",
     version: "1.1.0",
   },
   {
