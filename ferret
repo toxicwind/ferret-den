@@ -1,0 +1,59 @@
+#!/bin/sh
+# ferret — re-pull the ProjectDiscovery bins. Not a fork.
+set -eu
+BIN="${PDTM_BIN:-$HOME/.pdtm/go/bin}"
+PDTM="${PDTM:-$BIN/pdtm}"
+if [ ! -x "$PDTM" ]; then
+  PDTM="$(command -v pdtm || true)"
+fi
+need() {
+  if [ -z "${PDTM:-}" ] || [ ! -x "$PDTM" ]; then
+    echo "pdtm not found. Install upstream first:" >&2
+    echo "  go install github.com/projectdiscovery/pdtm/cmd/pdtm@latest" >&2
+    exit 1
+  fi
+}
+case "${1:-pull}" in
+  pull|update)
+    need
+    exec "$PDTM" -update-all
+    ;;
+  install)
+    need
+    shift || true
+    if [ "${1:-all}" = "all" ]; then
+      exec "$PDTM" -install-all
+    fi
+    exec "$PDTM" -install "$@"
+    ;;
+  remove)
+    need
+    shift
+    if [ "${1:-}" = "all" ]; then
+      exec "$PDTM" -remove-all
+    fi
+    exec "$PDTM" -remove "$@"
+    ;;
+  self)
+    need
+    exec "$PDTM" -self-update
+    ;;
+  path)
+    echo "$BIN"
+    ;;
+  list|ls)
+    echo "bin dir: $BIN"
+    echo "pdtm: ${PDTM:-missing}"
+    ;;
+  help|-h|--help)
+    echo "ferret pull      re-pull every installed upstream bin"
+    echo "ferret install   install all, or named bins"
+    echo "ferret self      update pdtm itself"
+    echo "ferret remove    remove named bins, or all"
+    echo "ferret path      print the bin dir"
+    ;;
+  *)
+    echo "unknown: $1" >&2
+    exit 2
+    ;;
+esac
