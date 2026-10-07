@@ -1,5 +1,7 @@
 # ferret-den
 
+![A ferret in the trash pulls out a scrap labeled subfinder. The door only says whisker.](docs/header.svg)
+
 An MCP server that exposes ProjectDiscovery reconnaissance binaries under decoupled tool names to prevent false-positive model refusals.
 
 `den:whisker` runs `subfinder`. `den:fang` runs `nuclei`. The connected LLM agent sees functional capabilities and structured schemas, but the canonical binary names never appear in the tool catalog.
