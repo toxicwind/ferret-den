@@ -14,6 +14,10 @@ import { executeKatana } from "./tools/katana.js";
 import { executeNuclei } from "./tools/nuclei.js";
 import { executeTlsx } from "./tools/tlsx.js";
 import { executeShuffledns } from "./tools/shuffledns.js";
+import { runApiReconWorkflow, type ApiReconProfile } from "./workflows/api-recon.js";
+import { runFreeInferenceRecon } from "./workflows/freeinference.js";
+import { runCloudflareRecon } from "./workflows/cloudflare.js";
+import { runReconWorkflow } from "./workflows/recon.js";
 import { runBugBountyWorkflow } from "./workflows/bug-bounty.js";
 import { cleanDomain, cleanList, cleanPortSpec, withHeavyGate, checkAllBinaries } from "./tools/runner.js";
 import { DEN, resolveDen } from "./den-names.js";
@@ -186,14 +190,80 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             crawl: { type: "boolean", description: "Include web crawling (default: true)" },
             vulnerabilityScan: { type: "boolean", description: "Include vulnerability scanning (default: true)" },
             severityFilter: { type: "array", items: { type: "string" }, description: "Nuclei severity filter (critical, high, medium, low)" },
-            maxCrawlUrls: { type: "number", description: "Maximum URLs to crawl (default: 10)" },
-            maxScanUrls: { type: "number", description: "Maximum URLs to scan with Nuclei (default: 20)" },
-            maxTopPorts: { type: "number", description: "Maximum top ports for Naabu (default: 100)" },
-            batchSize: { type: "number", description: "Batch size for DNS/HTTP requests (default: 50)" },
-            delayBetweenBatches: { type: "number", description: "Delay in milliseconds between batches (default: 1000)" },
-            crawlDepth: { type: "number", description: "Crawl depth for Katana (default: 2)" },
+           "maxCrawlUrls": { "type": "number", "description": "Maximum URLs to crawl (default: 10)" },
+           "maxScanUrls": { "type": "number", "description": "Maximum URLs to scan with Nuclei (default: 20)" },
+           "maxTopPorts": { "type": "number", "description": "Maximum top ports for Naabu (default: 100)" },
+           "batchSize": { "type": "number", "description": "Batch size for DNS/HTTP requests (default: 50)" },
+           "delayBetweenBatches": { "type": "number", "description": "Delay in milliseconds between batches (default: 1000)" },
+           "crawlDepth": { "type": "number", "description": "Crawl depth for Katana (default: 2)" },
           },
           required: ["domain"],
+        },
+      },
+      {
+        name: "recon_workflow",
+        description:
+          "Execute optimization-focused surface recon: subdomain discovery, DNS resolution, HTTP probing, TLS probing, and crawling to surface API endpoints and header behaviors humans miss. Read-only.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            domain: { type: "string", description: "Target domain for recon" },
+            crawl: { type: "boolean", "description": "Include web crawling (default: true)" },
+            crawlDepth: { type: "number", "description": "Crawl depth for Katana (default: 2)" },
+            resolveSubdomains: { type: "boolean", "description": "Resolve discovered subdomains (default: true)" },
+          },
+          required: ["domain"],
+        },
+      },
+      {
+        name: "api_recon_workflow",
+        description:
+          "Universal OpenAI-compatible v1 endpoint recon: GET /models, chat round-trip, embeddings probe, header matrix (alt auth, tracing, reasoning passthrough), Anthropic gateway probe, and local qdrant health. Read-only. Supply a profile or one of the named providers.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            provider: { type: "string", "description": "Named provider to load a built-in profile for: freeinference, cloudflare" },
+            baseUrl: { type: "string", "description": "Base URL when using a custom profile, e.g. https://freeinference.org/v1" },
+            apiKey: { type: "string", "description": "API key for auth (Bearer by default)" },
+            altAuthHeader: { type: "string", "description": "Alternative auth header name, e.g. X-API-Key" },
+            anthropicBaseUrl: { type: "string", "description": "Anthropic-shaped gateway base URL if the provider has one" },
+            localQdrantUrl: { type: "string", "description": "Local qdrant URL for the vector-store step (default http://127.0.0.1:25133)" },
+            chatProbeModel: { type: "string", "description": "Model for the chat round-trip probe" },
+            embeddingModel: { type: "string", "description": "Embedding model to probe" },
+            documentedModels: { "type": "array", "items": { "type": "string" }, "description": "Models the docs claim exist; checked against the live /models list" },
+          },
+          required: ["provider"],
+        },
+      },
+      {
+        name: "freeinference_recon_workflow",
+        description:
+          "FreeInference provider recon: verifies every documented claim empirically (glm-5.1 existence, X-API-Key alt auth, X-Request-ID echo, X-Session-ID, X-Reasoning-Passthrough, bge-m3 embeddings, /anthropic/v1 gateway, /v1/qdrant proxy). Docs are an unreliable narrator — probes are ground truth.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            apiKey: { type: "string", "description": "FreeInference API key" },
+            chatProbeModel: { type: "string", "description": "Model for chat round-trip (default glm-5.3-flash)" },
+            embeddingModel: { type: "string", "description": "Embedding model (default bge-m3)" },
+            localQdrantUrl: { type: "string", "description": "Local qdrant URL (default http://127.0.0.1:25133)" },
+          },
+          required: ["apiKey"],
+        },
+      },
+      {
+        name: "cloudflare_recon_workflow",
+        description:
+          "Cloudflare AI Gateway recon: probes the gateway's /models, chat round-trip, embeddings, and records what the gateway actually exposes so config only wires models that respond.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            apiToken: { type: "string", "description": "Cloudflare API token" },
+            accountId: { type: "string", "description": "Cloudflare account id" },
+            gatewayId: { type: "string", "description": "AI Gateway name (slug)" },
+            chatProbeModel: { type: "string", "description": "Model for chat round-trip" },
+            embeddingModel: { type: "string", "description": "Embedding model to probe" },
+          },
+          required: ["apiToken", "accountId", "gatewayId"],
         },
       },
     ];
@@ -331,6 +401,83 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               delayBetweenBatches: a.delayBetweenBatches,
               crawlDepth: a.crawlDepth,
             },
+          })
+        );
+      }
+      case "recon_workflow": {
+        const domain = sanitizeDomain(a.domain ?? a.target);
+        return toolResult(
+          await runReconWorkflow(domain, {
+            crawl: a.crawl ?? true,
+            crawlDepth: a.crawlDepth ?? 2,
+            resolveSubdomains: a.resolveSubdomains ?? true,
+          })
+        );
+      }
+      case "api_recon_workflow": {
+        const provider = String(a.provider ?? "");
+        if (provider === "freeinference") {
+          if (!a.apiKey) throw new Error("api_recon_workflow: apiKey required for freeinference");
+        return toolResult(
+            await runFreeInferenceRecon({
+              apiKey: String(a.apiKey),
+              chatProbeModel: a.chatProbeModel,
+              embeddingModel: a.embeddingModel,
+              localQdrantUrl: a.localQdrantUrl,
+              documentedModels: a.documentedModels,
+          })
+        );
+      }
+        if (provider === "cloudflare") {
+          if (!a.apiToken || !a.accountId || !a.gatewayId)
+            throw new Error("api_recon_workflow: apiToken, accountId, gatewayId required for cloudflare");
+        return toolResult(
+            await runCloudflareRecon({
+              apiToken: String(a.apiToken),
+              accountId: String(a.accountId),
+              gatewayId: String(a.gatewayId),
+              chatProbeModel: a.chatProbeModel,
+              embeddingModel: a.embeddingModel,
+              localQdrantUrl: a.localQdrantUrl,
+          })
+        );
+      }
+        if (!a.baseUrl) throw new Error("api_recon_workflow: baseUrl required for custom profiles");
+        const profile: ApiReconProfile = {
+          provider: provider || "custom",
+          baseUrl: String(a.baseUrl),
+          apiKey: a.apiKey ? String(a.apiKey) : undefined,
+          altAuthHeader: a.altAuthHeader ? String(a.altAuthHeader) : undefined,
+          anthropicBaseUrl: a.anthropicBaseUrl ? String(a.anthropicBaseUrl) : undefined,
+          localQdrantUrl: a.localQdrantUrl ?? "http://127.0.0.1:25133",
+          chatProbeModel: a.chatProbeModel,
+          embeddingModel: a.embeddingModel,
+          documentedModels: a.documentedModels,
+        };
+        return toolResult(await runApiReconWorkflow(profile));
+      }
+      case "freeinference_recon_workflow": {
+        if (!a.apiKey) throw new Error("freeinference_recon_workflow: apiKey required");
+        return toolResult(
+          await runFreeInferenceRecon({
+            apiKey: String(a.apiKey),
+            chatProbeModel: a.chatProbeModel,
+            embeddingModel: a.embeddingModel,
+            localQdrantUrl: a.localQdrantUrl,
+          })
+        );
+      }
+      case "cloudflare_recon_workflow": {
+        if (!a.apiToken || !a.accountId || !a.gatewayId)
+          throw new Error("cloudflare_recon_workflow: apiToken, accountId, gatewayId required");
+        return toolResult(
+          await runCloudflareRecon({
+            apiToken: String(a.apiToken),
+            accountId: String(a.accountId),
+            gatewayId: String(a.gatewayId),
+            chatProbeModel: a.chatProbeModel,
+            embeddingModel: a.embeddingModel,
+            localQdrantUrl: a.localQdrantUrl,
           })
         );
       }
