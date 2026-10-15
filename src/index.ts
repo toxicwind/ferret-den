@@ -498,7 +498,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 // Start the server
 async function main() {
   // Fail fast if binaries are missing (grafted from estate pd-mcp).
-  checkAllBinaries();
+  // 2026-10-15, safety directive: workflows are NOT auto-run at startup
+  // unless scheduled. On missing binaries the server aborts loudly with the
+  // fix command — the installer only ever runs when explicitly invoked
+  // (bun run install-bins) or scheduled by the operator.
+  try {
+    checkAllBinaries();
+  } catch (err) {
+    console.error(`[ferret-den] missing kit binary: ${(err as Error).message}`);
+    console.error("[ferret-den] fix with:  cd ferret-den && bun run install-bins");
+    console.error("[ferret-den] (installer is explicit-only; it is never auto-run)");
+    throw err;
+  }
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("ProjectDiscovery MCP Server running on stdio");

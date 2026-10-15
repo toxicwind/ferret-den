@@ -9,7 +9,9 @@
   "scripts": {
     "build": "tsc && chmod +x build/index.js",
     "dev": "tsc --watch",
-    "start": "bun src/index.ts"
+    "start": "bun src/index.ts",
+    "install-bins": "bun scripts/install.ts",
+    "check-bins": "bun scripts/install.ts --check"
   },
   "keywords": [
     "mcp",

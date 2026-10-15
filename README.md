@@ -83,13 +83,34 @@ The server exposes 22 discrete MCP tools. The primary nine jobs feature fully ty
 
 ## Installation
 
-### Prerequisites
+### One-shot: auto-installer (first-class)
 
-Install `pdtm` and set up the ProjectDiscovery suite:
+`scripts/install.ts` installs every binary the `den:*` jobs execute, so the
+server never fails on a missing binary at call time. It reads `src/den-names.ts`
+as the source of truth, resolves each binary via PATH or `~/.pdtm/go/bin`,
+installs through `pdtm`, and falls back to `go install` for legacy binaries
+pdtm no longer carries (`chaos` → `projectdiscovery/chaos-client`). Internal
+composite workflows (`den:raid`, `recon_workflow`) are excluded — they are
+implemented in `src/index.ts`, not external binaries.
+
+```bash
+bun install                       # JS deps only
+bun run install-bins              # install every missing kit binary
+bun run check-bins                # verify only (exit 1 if anything missing)
+bun run check-bins -- --quiet     # silent verify for CI / health checks
+```
+
+> **Safety note:** the installer is **explicit-only** — the MCP server never
+> auto-runs it. On missing binaries the server aborts loudly with the fix
+> command; install passes run when an operator invokes them (or schedules
+> them), never as an unscheduled side effect of startup.
+
+### Manual prerequisites (if you prefer)
 
 ```bash
 go install github.com/projectdiscovery/pdtm/cmd/pdtm@latest
 pdtm -install-all
+go install github.com/projectdiscovery/chaos-client/cmd/chaos@latest  # pdtm dropped chaos
 ```
 
 ### Server Setup
