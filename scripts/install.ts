@@ -53,6 +53,7 @@ const OVERLAY: Record<string, { catalog: string; graft?: string }> = {
   aix: { catalog: "aix" },
   chaos: { graft: "github.com/projectdiscovery/chaos-client/cmd/chaos" },
   pdtm: { catalog: "pdtm" },
+  ffuf: { graft: "github.com/ffuf/ffuf/v2" },
 };
 
 // Composite workflows are implemented in src/index.ts — no external binary.

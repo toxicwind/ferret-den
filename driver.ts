@@ -73,18 +73,19 @@ async function main() {
   const list = await rpc("tools/list");
   const names = (list.result.tools as any[]).map((t) => t.name);
   console.log("TOOLS:", names.join(", "));
-  const want = ["subfinder","dnsx","naabu","httpx","katana","nuclei","tlsx","shuffledns","bug_bounty_workflow"];
+  // Ferret overlay: tools/list exposes den names, not the underlying binaries.
+  const want = ["whisker","squeak","scratch","nose","tunnel","fang","padlock","rummage","raid","sniff"];
   for (const w of want) if (!names.includes(w)) failures.push(`missing tool: ${w}`);
 
   const calls: Array<[string, any, (p: any) => boolean]> = [
-    ["subfinder", { domain: "example.com" }, (p) => Array.isArray(p?.subdomains)],
-    ["dnsx", { domains: ["example.com"], recordType: "A" }, (p) => Array.isArray(p?.resolved) && p.resolved.length > 0],
-    ["naabu", { hosts: ["127.0.0.1"], ports: "80,443", scanType: "c" }, (p) => Array.isArray(p?.openPorts)],
-    ["httpx", { urls: ["https://example.com"], followRedirects: true }, (p) => Array.isArray(p?.responses) && p.responses.length > 0],
-    ["katana", { urls: ["https://example.com"], depth: 2, maxDurationSeconds: 60 }, (p) => Array.isArray(p?.endpoints)],
-    ["nuclei", { targets: ["https://example.com"], templateIds: ["http-missing-security-headers"], severity: ["info"], confirm: true }, (p) => Array.isArray(p?.vulnerabilities)],
-    ["tlsx", { hosts: ["example.com"], port: 443 }, (p) => Array.isArray(p?.hosts) && p.hosts.length > 0],
-    ["shuffledns", { domain: "example.com", wordlist: `${DIR}/wordlist.txt` }, (p) => Array.isArray(p?.subdomains)],
+    ["whisker", { domain: "example.com" }, (p) => Array.isArray(p?.subdomains)],
+    ["squeak", { domains: ["example.com"], recordType: "A" }, (p) => Array.isArray(p?.resolved) && p.resolved.length > 0],
+    ["scratch", { hosts: ["127.0.0.1"], ports: "80,443", scanType: "c" }, (p) => Array.isArray(p?.openPorts)],
+    ["nose", { urls: ["https://example.com"], followRedirects: true }, (p) => Array.isArray(p?.responses) && p.responses.length > 0],
+    ["tunnel", { urls: ["https://example.com"], depth: 2, maxDurationSeconds: 60 }, (p) => Array.isArray(p?.endpoints)],
+    ["fang", { targets: ["https://example.com"], templateIds: ["http-missing-security-headers"], severity: ["info"], confirm: true }, (p) => Array.isArray(p?.vulnerabilities)],
+    ["padlock", { hosts: ["example.com"], port: 443 }, (p) => Array.isArray(p?.hosts) && p.hosts.length > 0],
+    ["rummage", { domain: "example.com", wordlist: `${DIR}/wordlist.txt` }, (p) => Array.isArray(p?.subdomains)],
   ];
 
   for (const [tool, args, check] of calls) {

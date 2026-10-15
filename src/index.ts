@@ -22,6 +22,7 @@ import { runBugBountyWorkflow } from "./workflows/bug-bounty.js";
 import { cleanDomain, cleanList, cleanPortSpec, withHeavyGate, checkAllBinaries } from "./tools/runner.js";
 import { DEN, resolveDen } from "./den-names.js";
 import { executeKit } from "./tools/kit.js";
+import { executeFuzz } from "./tools/ffuf.js";
 
 function toList(input: unknown): string[] {
   if (Array.isArray(input)) return cleanList(input);
@@ -267,7 +268,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
     ];
-  const denTools = DEN.filter((d) => d.bin === "bug_bounty_workflow" || baseTools.some((t) => t.name === d.bin)).map((d) => {
+  // Ferret overlay: expose EVERY den tool (scatter/keeper/muse/sniff and the
+  // base-tool schemas alike). baseTools provide rich schemas; the rest get the
+  // generic kit schema. The overlays add discoverability — an agent that can't
+  // see a den name can never invoke its job (the roster complements this).
+  const denTools = DEN.map((d) => {
     const base = baseTools.find((t) => t.name === d.bin);
     const kitSchema = {
       type: "object",
@@ -277,10 +282,21 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         confirm: { type: "boolean", description: "Required for gated jobs" },
       },
     };
+    const sniffSchema = {
+      type: "object",
+      properties: {
+        target: { type: "string", description: "URL to fuzz (http(s)://host[/path]); FUZZ appended if absent" },
+        wordlist: { type: "string", description: "Wordlist path (default: the Warren's common-paths list)" },
+        statuses: { type: "string", description: "Statuses to match, e.g. 200,401,405 (default 200,201,401,403,405)" },
+        rate: { type: "number", description: "Requests/sec cap (default 150, hard cap 400)" },
+        threads: { type: "number", description: "Concurrency (default 12, cap 30)" },
+        confirm: { type: "boolean", description: "Required: this fuzzes a live endpoint" },
+      },
+    };
     return {
       name: d.den,
       description: d.job,
-      inputSchema: base?.inputSchema || kitSchema,
+      inputSchema: d.bin === "ffuf" ? sniffSchema : base?.inputSchema || kitSchema,
     };
   });
   const roster = [{
@@ -305,6 +321,24 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   try {
     switch (name) {
+      case "ffuf": {
+        // den:sniff — hardened fuzz executor (rate cap, JSON-only, heavy-gate).
+        const target = a.target ?? a.domain ?? a.host;
+        if (!target) throw new Error("sniff requires a target (http://host[/path])");
+        const r = await executeFuzz(String(target), {
+          wordlist: a.wordlist,
+          statuses: a.statuses,
+          rate: typeof a.rate === "number" ? a.rate : undefined,
+          threads: typeof a.threads === "number" ? a.threads : undefined,
+        });
+        return toolResult({
+          target: r.target,
+          hits: r.hits,
+          attempted: r.attempted,
+          timedOut: r.timedOut,
+          note: "den:sniff — read-only, rate-limited fuzz over the Warren's common-path list",
+        });
+      }
       case "subfinder": {
         const domain = sanitizeDomain(a.domain ?? a.target);
         return toolResult(await executeSubfinder(domain, a.silent !== false));

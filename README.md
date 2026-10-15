@@ -44,7 +44,7 @@ Renaming is not an exploit or a jailbreak. If a model determines that an underly
 
 - **No Shell Interpolation:** All binaries are spawned directly using argument arrays via POSIX `spawn`. Shells (`/bin/sh`, `cmd.exe`) are never invoked, eliminating command injection risks.
 - **Execution Timeouts:** Kit jobs carry an enforced 120-second execution cap. `den:denhome` exits after 8 seconds.
-- **Human Confirmation Gate:** `den:fang`, `den:raid`, `den:keeper`, `den:chatter`, `den:shadow`, and `den:denhome` require `confirm: true` before execution begins.
+- **Human Confirmation Gate:** `den:fang`, `den:raid`, `den:keeper`, `den:chatter`, `den:shadow`, `den:denhome`, and `den:sniff` require `confirm: true` before execution begins.
 - **External Binaries:** The repository does not ship binaries. It invokes existing executables managed by `pdtm` in `$PD_TOOLS_DIR` (defaulting to `$HOME/.pdtm/go/bin`).
 
 ---
@@ -77,6 +77,7 @@ The server exposes 22 discrete MCP tools. The primary nine jobs feature fully ty
 | `den:turf` | `tldfinder` | Discovers top-level domains for a given entity. | Standard |
 | `den:denhome` | `simplehttpserver` | Spawns a local testing file server that auto-terminates after 8 seconds. | `confirm: true` |
 | `den:muse` | `aix` | Prompts the Warren's command assistants. | Standard |
+| `den:sniff` | `ffuf` | Fuzzes URL paths/parameters for live endpoints (read-only, rate-limited, JSON results). | `confirm: true` |
 | `den:roster` | *internal* | Returns the active tool mapping table from the running server. | Standard |
 
 ---

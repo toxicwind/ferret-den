@@ -29,6 +29,7 @@ export const DEN: DenTool[] = [
   { den: "turf", bin: "tldfinder", job: "Discovers top-level domains for a given entity." },
   { den: "denhome", bin: "simplehttpserver", job: "Spawns a local file server that exits after 8 seconds.", gated: true },
   { den: "muse", bin: "aix", job: "Prompts the kit assistant." },
+  { den: "sniff", bin: "ffuf", job: "Fuzzes URL paths/parameters for live endpoints (read-only, rate-limited).", gated: true },
 ];
 
 const BY_DEN = new Map(DEN.map((t) => [t.den, t]));

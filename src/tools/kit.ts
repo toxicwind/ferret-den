@@ -3,6 +3,7 @@ import { runBinary, cleanList } from "./runner.js";
 const KIT = new Set([
   "pdtm", "uncover", "notify", "proxify", "chaos", "cdncheck", "asnmap",
   "alterx", "mapcidr", "cloudlist", "tldfinder", "simplehttpserver", "aix",
+  "ffuf",
 ]);
 
 export async function executeKit(bin: string, target: string | undefined, extra: unknown) {
