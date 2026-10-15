@@ -6,7 +6,7 @@ Instructions for AI agents working in this repository.
 
 ## What this is
 
-An MCP (Model Context Protocol) server that exposes ProjectDiscovery's
+An MCP (Model Context Protocol) server that exposes the Warren's
 recon/security binaries as tools for AI agents: `subfinder`, `dnsx`, `naabu`,
 `httpx`, `katana`, `nuclei`, `tlsx`, `shuffledns`, plus a composite
 `bug_bounty_workflow`. Fork of `intelligent-ears/pd-tools-mcp`, hardened for

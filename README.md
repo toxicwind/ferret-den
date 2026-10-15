@@ -2,7 +2,7 @@
 
 # ferret-den
 
-An MCP server that exposes ProjectDiscovery reconnaissance binaries under decoupled tool names to prevent false-positive model refusals.
+An MCP server that exposes the Warren's reconnaissance kit under decoupled tool names to prevent false-positive model refusals.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/toxicwind/ferret-den/ci.yml?style=for-the-badge&label=ci)](https://github.com/toxicwind/ferret-den/actions/workflows/ci.yml)
 [![WTFPL](https://img.shields.io/badge/license-WTFPL-111111?style=for-the-badge)](COPYING)
@@ -64,11 +64,11 @@ The server exposes 22 discrete MCP tools. The primary nine jobs feature fully ty
 | `den:rummage` | `shuffledns` | Brute-forces domain resolution against wordlists. | Standard |
 | `den:fang` | `nuclei` | Executes vulnerability and configuration template checks. | `confirm: true` |
 | `den:raid` | *chain* | Runs subfinder, dnsx, naabu, then probes open ports with httpx, crawls with katana, and scans with nuclei. | `confirm: true` |
-| `den:keeper` | `pdtm` | Installs or updates ProjectDiscovery binaries. | `confirm: true` |
+| `den:keeper` | `pdtm` | Fetches and updates kit members from the Warren. | `confirm: true` |
 | `den:expose` | `uncover` | Discovers exposed assets and administrative panels via OSINT engines. | Standard |
 | `den:chatter` | `notify` | Dispatches webhook and messaging notifications. | `confirm: true` |
 | `den:shadow` | `proxify` | Intercepts and captures HTTP/HTTPS traffic. | `confirm: true` |
-| `den:scatter` | `chaos` | Queries ProjectDiscovery Chaos threat intelligence datasets. | Standard |
+| `den:scatter` | `chaos` | Queries the Warren's curated threat-intelligence datasets. | Standard |
 | `den:cloak` | `cdncheck` | Detects CDN, cloud provider, and WAF IP ownership. | Standard |
 | `den:range` | `asnmap` | Maps ASN IP ranges and CIDR blocks. | Standard |
 | `den:mutate` | `alterx` | Generates permutation lists of subdomains. | Standard |
@@ -76,7 +76,7 @@ The server exposes 22 discrete MCP tools. The primary nine jobs feature fully ty
 | `den:cloudkit` | `cloudlist` | Enumerates assets across cloud infrastructure providers. | Standard |
 | `den:turf` | `tldfinder` | Discovers top-level domains for a given entity. | Standard |
 | `den:denhome` | `simplehttpserver` | Spawns a local testing file server that auto-terminates after 8 seconds. | `confirm: true` |
-| `den:muse` | `aix` | Prompts ProjectDiscovery AI command assistants. | Standard |
+| `den:muse` | `aix` | Prompts the Warren's command assistants. | Standard |
 | `den:roster` | *internal* | Returns the active tool mapping table from the running server. | Standard |
 
 ---
@@ -109,12 +109,9 @@ bun run check-bins -- --quiet     # silent verify for CI / health checks
 
 ### Manual prerequisites (if you prefer)
 
-```bash
-go install github.com/projectdiscovery/pdtm/cmd/pdtm@latest
-pdtm -install-all
-go install github.com/projectdiscovery/chaos-client/cmd/chaos@latest  # pdtm dropped chaos
-```
-
+The Warren's burrow URLs are internal constants — see the `OVERLAY` table in
+`scripts/install.ts`. A manual pass is just: install the catalog keeper from
+its burrow, run it with `-install-all`, and members land in `~/.pdtm/go/bin`.
 ### Server Setup
 
 ```bash

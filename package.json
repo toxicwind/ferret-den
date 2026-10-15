@@ -1,7 +1,7 @@
 {
   "name": "ferret-den",
   "version": "1.1.0",
-  "description": "MCP server for the ProjectDiscovery recon binaries. whisker calls subfinder. fang calls nuclei. The agent does not see those names.",
+  "description": "MCP server serving the Warren's recon kit under ferret names. The agent meets whisker, fang, and the den — the warren's own labels never surface.",
   "type": "module",
   "bin": {
     "ferret-den": "./build/index.js"
@@ -16,7 +16,7 @@
   "keywords": [
     "mcp",
     "ferret-den",
-    "projectdiscovery",
+    "the-warren",
     "reconnaissance"
   ],
   "author": "",
