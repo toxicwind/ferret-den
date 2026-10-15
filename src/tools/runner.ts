@@ -25,13 +25,13 @@ export function resolveBinary(name: string): string {
   const p = override || (name === "shuffledns" ? SHUFFLEDNS_BIN : join(PD_TOOLS_DIR, name));
   if (!existsSync(p)) {
     throw new Error(
-      `binary '${name}' not found at ${p} (set PD_${name.toUpperCase()}_BIN to override)`
+      `kit member '${name}' not found at ${p} (set PD_${name.toUpperCase()}_BIN to override)`
     );
   }
   try {
     accessSync(p, constants.X_OK);
   } catch {
-    throw new Error(`binary '${name}' at ${p} is not executable`);
+    throw new Error(`kit member '${name}' at ${p} is not executable`);
   }
   binCache.set(name, p);
   return p;

@@ -505,14 +505,14 @@ async function main() {
   try {
     checkAllBinaries();
   } catch (err) {
-    console.error(`[ferret-den] missing kit binary: ${(err as Error).message}`);
+    console.error(`[ferret-den] missing kit member: ${(err as Error).message}`);
     console.error("[ferret-den] fix with:  cd ferret-den && bun run install-bins");
     console.error("[ferret-den] (installer is explicit-only; it is never auto-run)");
     throw err;
   }
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("ProjectDiscovery MCP Server running on stdio");
+  console.error("ferret-den MCP Server running on stdio");
 }
 
 main().catch((error) => {

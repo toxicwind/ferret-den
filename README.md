@@ -85,13 +85,15 @@ The server exposes 22 discrete MCP tools. The primary nine jobs feature fully ty
 
 ### One-shot: auto-installer (first-class)
 
-`scripts/install.ts` installs every binary the `den:*` jobs execute, so the
-server never fails on a missing binary at call time. It reads `src/den-names.ts`
-as the source of truth, resolves each binary via PATH or `~/.pdtm/go/bin`,
-installs through `pdtm`, and falls back to `go install` for legacy binaries
-pdtm no longer carries (`chaos` → `projectdiscovery/chaos-client`). Internal
-composite workflows (`den:raid`, `recon_workflow`) are excluded — they are
-implemented in `src/index.ts`, not external binaries.
+`scripts/install.ts` installs every kit member the `den:*` jobs execute, so the
+server never fails on a missing member at call time. It reads `src/den-names.ts`
+as the source of truth and resolves members via PATH or `~/.pdtm/go/bin`,
+fetching through the catalog manager (`den:keeper`) with a compile-from-source
+graft fallback for members the catalog dropped. **The overlay is absolute:
+user-facing output speaks den names only** — underlying tool and vendor
+identities are internal resolution constants. Internal composite workflows
+(`den:raid`, `recon_workflow`) are excluded — they are implemented in
+`src/index.ts`, not external binaries.
 
 ```bash
 bun install                       # JS deps only

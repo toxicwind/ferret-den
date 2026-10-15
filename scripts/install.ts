@@ -1,13 +1,18 @@
 #!/usr/bin/env bun
 /**
- * ferret-den auto-installer — first-class (2026-10-15).
+ * ferret-den kit installer — first-class (2026-10-15).
  *
- * Installs every binary the den:* jobs execute, so the MCP server never
- * fails on a missing binary at call time. Resolution order per binary:
- *   1. PATH (already resolvable)
- *   2. pdtm catalog  -> `pdtm -install <bin>` (lands in ~/.pdtm/go/bin)
- *   3. go install fallback for binaries pdtm no longer carries
- *      (chaos = legacy chaos-client; GOBIN=~/.pdtm/go/bin)
+ * THE OVERLAY IS ABSOLUTE: user-facing strings speak DEN names only.
+ * The underlying binary names and upstream vendor identities are internal
+ * resolution details and never appear in logs or output (the same doctrine
+ * that keeps binary names out of the tools/list catalog).
+ *
+ * Resolution order per kit member (all den names):
+ *   1. bin dir (PD_TOOLS_DIR, default ~/.pdtm/go/bin)
+ *   2. PATH
+ *   3. keeper pass   — the catalog manager (gated behind its den name)
+ *   4. graft pass    — compile-from-source fallback for kit members the
+ *                      catalog manager no longer carries
  *
  * Modes:
  *   bun scripts/install.ts            # install everything missing
@@ -15,42 +20,57 @@
  *   bun scripts/install.ts --check --quiet   # silent verify for CI/health
  */
 
-import { readdirSync, existsSync } from "node:fs";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
 const HOME = homedir();
-const PD_BIN = join(HOME, ".pdtm", "go", "bin");
 const ROOT = join(import.meta.dir, "..");
+const BIN_DIR = process.env.PD_TOOLS_DIR || join(HOME, ".pdtm", "go", "bin");
 
-// Extract the authoritative binary set from src/den-names.ts (static mapping
-// is the single source of truth for what the server can execute).
-const denNames = readFileSync(join(ROOT, "src", "den-names.ts"), "utf8");
-// Internal composite workflows live in src/index.ts and execute other kit
-// binaries — den-names.ts lists them under `bin:` but no external binary
-// exists (e.g. den:raid). Exclude them from installer requirements.
-const INTERNAL_WORKFLOWS = new Set(["bug_bounty_workflow", "recon_workflow"]);
-const REQUIRED = [...new Set([...denNames.matchAll(/bin:\s*"([a-z0-9_-]+)"/g)].map((m) => m[1]))]
-  .filter((b) => !INTERNAL_WORKFLOWS.has(b))
-  .sort();
-
-// pdtm does not carry every legacy binary; these fall back to `go install`.
-const GO_FALLBACK: Record<string, { pkg: string; env?: Record<string, string> }> = {
-  chaos: { pkg: "github.com/projectdiscovery/chaos-client/cmd/chaos" },
-  // simplehttpserver had a Go module rename; pdtm carries it, but keep a
-  // fallback path in case the catalog moves again.
-  simplehttpserver: { pkg: "github.com/projectdiscovery/simplehttpserver/cmd/simplehttpserver" },
+// den -> underlying identity. INTERNAL ONLY: never printed.
+// (If you are reading this file to learn vendor names, note the design
+// deliberately keeps them out of the runtime interface.)
+const OVERLAY: Record<string, { catalog: string; graft?: string }> = {
+  subfinder: { catalog: "subfinder" },
+  dnsx: { catalog: "dnsx" },
+  httpx: { catalog: "httpx" },
+  nuclei: { catalog: "nuclei" },
+  naabu: { catalog: "naabu" },
+  katana: { catalog: "katana" },
+  tlsx: { catalog: "tlsx" },
+  shuffledns: { catalog: "shuffledns" },
+  uncover: { catalog: "uncover" },
+  tldfinder: { catalog: "tldfinder" },
+  cdncheck: { catalog: "cdncheck" },
+  asnmap: { catalog: "asnmap" },
+  alterx: { catalog: "alterx" },
+  mapcidr: { catalog: "mapcidr" },
+  cloudlist: { catalog: "cloudlist" },
+  notify: { catalog: "notify" },
+  proxify: { catalog: "proxify" },
+  simplehttpserver: { catalog: "simplehttpserver", graft: "github.com/projectdiscovery/simplehttpserver/cmd/simplehttpserver" },
+  aix: { catalog: "aix" },
+  chaos: { graft: "github.com/projectdiscovery/chaos-client/cmd/chaos" },
+  pdtm: { catalog: "pdtm" },
 };
+
+// Composite workflows are implemented in src/index.ts — no external binary.
+const INTERNAL_WORKFLOWS = new Set(["bug_bounty_workflow", "recon_workflow"]);
+
+const denNames = readFileSync(join(ROOT, "src", "den-names.ts"), "utf8");
+const REQUIRED = [...new Set([...denNames.matchAll(/bin:\s*"([a-z0-9_-]+)"/g)].map((m) => m[1]))]
+  .filter((b) => !INTERNAL_WORKFLOWS.has(b) && OVERLAY[b])
+  .sort();
 
 const check = Bun.argv.includes("--check");
 const quiet = Bun.argv.includes("--quiet");
 const err = (m: string) => console.error(m);
 
-function resolvable(bin: string): string | null {
-  if (existsSync(join(PD_BIN, bin))) return join(PD_BIN, bin);
+function resolvable(member: string): string | null {
+  if (existsSync(join(BIN_DIR, member))) return join(BIN_DIR, member);
   try {
-    const out = Bun.spawnSync(["bash", "-lc", `command -v ${bin}`]);
+    const out = Bun.spawnSync(["bash", "-lc", `command -v ${member}`]);
     const p = out.stdout.toString().trim();
     return p || null;
   } catch {
@@ -59,57 +79,45 @@ function resolvable(bin: string): string | null {
 }
 
 const missing: string[] = [];
-const present: string[] = [];
-for (const bin of REQUIRED) {
-  const p = resolvable(bin);
-  if (p) present.push(bin);
-  else missing.push(bin);
+let presentCount = 0;
+for (const member of REQUIRED) {
+  if (resolvable(member)) presentCount++;
+  else missing.push(member);
 }
 
-if (quiet && check) {
-  process.exit(missing.length ? 1 : 0);
-}
+if (quiet && check) process.exit(missing.length ? 1 : 0);
 
-console.log(`# ferret-den auto-installer — ${REQUIRED.length} binaries required`);
-console.log(`# present: ${present.length}  missing: ${missing.length}${missing.length ? " -> " + missing.join(", ") : ""}`);
+console.log(`# den kit — ${REQUIRED.length} members required`);
+console.log(`# present: ${presentCount}  missing: ${missing.length}${missing.length ? " -> " + missing.join(", ") : ""}`);
 
-if (check) {
-  process.exit(missing.length ? 1 : 0);
-}
+if (check) process.exit(missing.length ? 1 : 0);
 
-for (const bin of missing) {
-  err(`[install] ${bin} ...`);
-  // 1) pdtm
-  const pdtm = resolvable("pdtm") ?? join(HOME, "go", "bin", "pdtm");
-  if (existsSync(pdtm)) {
-    const r = Bun.spawnSync([pdtm, "-install", bin], { stdout: "pipe", stderr: "pipe" });
-    if (existsSync(join(PD_BIN, bin))) {
-      err(`[install] ${bin}: OK (pdtm)`);
-      continue;
+const keeper = resolvable("keeper") || resolvable("pdtm");
+for (const member of missing) {
+  err(`[kit] fetching ${member} ...`);
+  let ok = false;
+  if (keeper && existsSync(keeper) && OVERLAY[member]?.catalog) {
+    const r = Bun.spawnSync([keeper, "-install", OVERLAY[member].catalog], { stdout: "pipe", stderr: "pipe" });
+    ok = existsSync(join(BIN_DIR, member));
+    if (!ok && r.exitCode !== 0 && !OVERLAY[member].graft) {
+      err(`[kit] ${member}: catalog manager failed: ${r.stderr.toString().split("\n").slice(-2).join(" ").slice(0, 200)}`);
     }
-    if (r.exitCode !== 0 && !GO_FALLBACK[bin]) {
-      err(`[install] ${bin}: pdtm failed: ${r.stderr.toString().split("\n").slice(-2).join(" ").slice(0, 200)}`);
-    }
-  } else {
-    err(`[install] pdtm not found (${pdtm}); using go install fallback for ${bin}`);
   }
-  // 2) go install fallback
-  const fb = GO_FALLBACK[bin];
-  if (fb) {
-    const env = { ...process.env, GOBIN: PD_BIN };
-    const r = Bun.spawnSync(["go", "install", `${fb.pkg}@latest`], { env, stdout: "pipe", stderr: "pipe" });
-    if (existsSync(join(PD_BIN, bin))) {
-      err(`[install] ${bin}: OK (go install)`);
-      continue;
-    }
-    err(`[install] ${bin}: go install failed: ${r.stderr.toString().split("\n").slice(-3).join(" ").slice(0, 300)}`);
+  if (!ok && OVERLAY[member]?.graft) {
+    const r = Bun.spawnSync(["go", "install", `${OVERLAY[member].graft}@latest`], {
+      env: { ...process.env, GOBIN: BIN_DIR }, stdout: "pipe", stderr: "pipe",
+    });
+    ok = existsSync(join(BIN_DIR, member));
+    if (!ok) err(`[kit] ${member}: graft failed: ${r.stderr.toString().split("\n").slice(-3).join(" ").slice(0, 300)}`);
+  }
+  if (!ok) {
+    err(`[kit] ${member}: unresolved (no catalog entry, no graft path)`);
     process.exitCode = 1;
-    continue;
+  } else {
+    err(`[kit] ${member}: fetched`);
   }
-  err(`[install] ${bin}: no resolver available (not in pdtm catalog, no go fallback)`);
-  process.exitCode = 1;
 }
 
-const stillMissing = REQUIRED.filter((b) => !resolvable(b));
+const stillMissing = REQUIRED.filter((m) => !resolvable(m));
 console.log(`# done — ${REQUIRED.length - stillMissing.length}/${REQUIRED.length} resolve${stillMissing.length ? ", still missing: " + stillMissing.join(", ") : ""}`);
 if (stillMissing.length) process.exit(1);
