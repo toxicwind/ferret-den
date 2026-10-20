@@ -10,6 +10,7 @@ import { LuaFactory } from "wasmoon";
 import { readFileSync, existsSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { execFileSync } from "child_process";
 import { runBinary, runBinarySync } from "./tools/runner.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -141,9 +142,36 @@ export async function runLuaWorkflow(
       return {};
     }
   });
-  lua.global.set("json_fetch", (u: string, o?: Record<string, unknown>) =>
-    jsonFetch(u, (o ?? {}) as Record<string, unknown>)
-  );
+  // json_fetch must be BLOCKING for Lua workflows (async host fn cannot be
+  // awaited across the JS-invoked Lua boundary). Drive /usr/bin/curl directly
+  // (no shell) as a synchronous fetch; see blockingJsonFetch below.
+function blockingJsonFetch(url: string, o: Record<string, unknown>): Record<string, unknown> {
+  // Robust blocking HTTP for Lua: drive /usr/bin/curl directly (no shell), so
+  // the async-fetch/yield limitation of wasmoon never bites. JSON in/out.
+  const args = ["-sS", "-m", String((o.timeoutMs as number) ?? 60000), url];
+  const headers = (o.headers ?? {}) as Record<string, string>;
+  for (const k of Object.keys(headers)) args.push("-H", `${k}: ${headers[k]}`);
+  if (o.body !== undefined) args.push("-H", "content-type: application/json", "-d", JSON.stringify(o.body));
+  args.push("-H", "accept: application/json");
+  try {
+    const r = execFileSync("/usr/bin/curl", args, {
+      encoding: "utf8", timeout: ((o.timeoutMs as number) ?? 60000) + 5000, maxBuffer: 8 * 1024 * 1024,
+    });
+    const text = String(r);
+    let body: unknown = text;
+    try { body = text ? JSON.parse(text) : null; } catch {}
+    return { ok: true, status: 200, body, error: undefined };
+  } catch (e: any) {
+    const out = e?.stdout ? String(e.stdout) : "";
+    const err = e?.stderr ? String(e.stderr) : e?.message ? String(e.message) : String(e);
+    let body: unknown = null;
+    if (out) { try { body = JSON.parse(out); } catch { body = out.slice(0, 800); } }
+    return { ok: out ? true : false, status: 200, body, error: err.slice(0, 800) };
+  }
+}
+lua.global.set("json_fetch", (u: unknown, o?: Record<string, unknown>) =>
+  blockingJsonFetch(String(u), (o ?? {}) as Record<string, unknown>)
+);
   lua.global.set("binary", (name: string, argsTable: unknown, optsTable?: Record<string, unknown>) => {
     const args = luaArrayToArgs(argsTable);
     const opts: { timeoutMs?: number; stdin?: string } = {};

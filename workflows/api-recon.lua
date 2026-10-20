@@ -1,5 +1,5 @@
 -- workflows/api-recon.lua — universal OpenAI-compatible /v1 endpoint recon (Lua).
--- Uses json_fetch(url, {method,headers,body,timeoutMs}):await() (wasmoon awaitable).
+-- Uses json_fetch(url, {method,headers,body,timeoutMs}) (wasmoon awaitable).
 -- Probes /v1/models, chat round-trip, embeddings, and reports status/latency.
 -- Reads `profile` {baseUrl, apiKey, model, chatProbePrompt}; writes `_result`.
 
@@ -17,7 +17,7 @@ function run(profile)
   _result.base = b
 
   -- 1. /v1/models
-  local m = json_fetch(b .. "/v1/models", { method = "GET", headers = h, timeoutMs = 30000 }):await()
+  local m = json_fetch(b .. "/v1/models", { method = "GET", headers = h, timeoutMs = 30000 })
   _result.models = { ok = m.ok, status = m.status, latencyMs = m.latencyMs }
   if m.ok and type(m.body) == "table" then
     local ids = {}
@@ -36,7 +36,7 @@ function run(profile)
     headers = h,
     body = { model = model, messages = { { role = "user", content = "Reply with exactly: STRICT_OK" } }, max_tokens = 64 },
     timeoutMs = 90000,
-  }):await()
+  })
   _result.chat = { ok = chat.ok, status = chat.status, latencyMs = chat.latencyMs }
   if chat.ok and type(chat.body) == "table" then
     local c = chat.body.choices
@@ -53,13 +53,13 @@ function run(profile)
     headers = h,
     body = { model = "text-embedding", input = "hi" },
     timeoutMs = 30000,
-  }):await()
+  })
   _result.embeddings = { ok = em.ok, status = em.status }
 
   -- 4. header/alt-auth probe: try x-api-key (Anthropic-style) on a tiny GET
   local hx = {}
   if #key > 0 then hx["x-api-key"] = key end
-  local alt = json_fetch(b .. "/v1/models", { method = "GET", headers = hx, timeoutMs = 20000 }):await()
+  local alt = json_fetch(b .. "/v1/models", { method = "GET", headers = hx, timeoutMs = 20000 })
   _result.altAuth = { status = alt.status, okInAlt = alt.ok }
 
   _result.ok = true
