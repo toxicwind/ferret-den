@@ -19,6 +19,34 @@ import { runFreeInferenceRecon } from "./workflows/freeinference.js";
 import { runCloudflareRecon } from "./workflows/cloudflare.js";
 import { runReconWorkflow } from "./workflows/recon.js";
 import { runBugBountyWorkflow } from "./workflows/bug-bounty.js";
+import { runLuaWorkflow } from "./workflow-lua.js";
+import { readFileSync, existsSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+const __iwd = dirname(fileURLToPath(import.meta.url));
+const WORKFLOW_MANIFEST = join(__iwd, "..", "workflows", "workflows.toml");
+// Map manifest name -> { lua, confirm }. Tiny TOML reader (no dep) for the
+// manifest shape we emit. Runtime-loaded: adding a .lua + a row needs no build.
+function loadWorkflowLua(name: string): { lua: string; confirm: boolean } | undefined {
+  if (!existsSync(WORKFLOW_MANIFEST)) return undefined;
+  try {
+    const lines = readFileSync(WORKFLOW_MANIFEST, "utf8").split("\n");
+    let cur: { name: string; lua: string; confirm: boolean } | null = null;
+    for (const raw of lines) {
+      const line = raw.trim();
+      if (line === "[[workflow]]") { cur = { name: "", lua: "", confirm: false }; continue; }
+      if (!cur) continue;
+      const kv = /^(\w+)\s*=\s*"?([^"#]+?)"?\s*$/.exec(line);
+      if (!kv) continue;
+      const [, k, v] = kv;
+      if (k === "name") cur.name = v.trim();
+      else if (k === "lua") cur.lua = v.trim();
+      else if (k === "confirm") cur.confirm = v.trim() === "true";
+      if (cur.name === name && cur.lua) return { lua: cur.lua, confirm: cur.confirm };
+    }
+  } catch { return undefined; }
+  return undefined;
+}
 import { cleanDomain, cleanList, cleanPortSpec, withHeavyGate, checkAllBinaries } from "./tools/runner.js";
 import { DEN, resolveDen } from "./den-names.js";
 import { executeKit } from "./tools/kit.js";
@@ -440,6 +468,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
       case "recon_workflow": {
         const domain = sanitizeDomain(a.domain ?? a.target);
+        const lw = loadWorkflowLua("recon_workflow") ?? loadWorkflowLua("recon");
+        if (lw) {
+          // Runtime Lua path — extension without a rebuild.
+          return toolResult(
+            await runLuaWorkflow(lw.lua, {
+              domain,
+              probe: a.probe ?? false,
+              recordTypes: a.recordTypes ?? "A,AAAA,CNAME,MX,NS,TXT",
+            })
+          );
+        }
         return toolResult(
           await runReconWorkflow(domain, {
             crawl: a.crawl ?? true,

@@ -56,7 +56,7 @@ The server exposes 22 discrete MCP tools. The primary nine jobs feature fully ty
 | MCP Tool Name | Underlying Binary | Functional Description | Execution Gate |
 | :--- | :--- | :--- | :--- |
 | `den:whisker` | `subfinder` | Discovers subdomains passively across public sources. | Standard |
-| `den:squeak` | `dnsx` | Resolves hostnames and validates active DNS records. | Standard |
+| `den:squeak` | `dnsx` | Resolves hostnames and validates active DNS records. Accepts one or many record types via `types: "A,AAAA,CNAME,MX,NS,TXT,PTR,SOA"` (or `recordType: "TXT"`). Output is aggregated per requested type. | Standard |
 | `den:nose` | `httpx` | Probes HTTP/HTTPS endpoints for status, title, and tech stack. | Standard |
 | `den:padlock` | `tlsx` | Inspects TLS/SSL certificates, ciphers, and protocols. | Standard |
 | `den:scratch` | `naabu` | Performs fast TCP port scanning. | Standard |

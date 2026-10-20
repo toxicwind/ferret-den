@@ -1,0 +1,53 @@
+# ferret-den workflow manifest (SSOT for runtime workflow loading)
+#
+# Each workflow is a Lua script (workflows/<name>.lua) exposing:
+#   function run(profile) -> table  -- orchestrate the den by calling host fns:
+#     binary("subfinder", {...})  -- run an executor with args
+#     json_fetch(url, headers)    -- HTTP GET/POST returning parsed JSON
+#   end
+#
+# Adding a workflow = drop a <name>.lua + one row here. No rebuild, no compile
+# coupling: the Lua host loads scripts + this manifest at runtime. A broken
+# workflow can never brick the server (it fails only when invoked).
+
+[[workflow]]
+name = "recon"
+lua = "recon.lua"
+description = "Composable sub-domain → DNS → probes → port pipeline, each step optional."
+schema = { domain = "string" }
+confirm = false
+
+[[workflow]]
+name = "bug_bounty_workflow"
+lua = "bug-bounty.lua"
+description = "Full bug bounty pipeline: subfinder, dnsx, naabu, httpx, katana, nuclei."
+schema = { domain = "string", port_scan = "boolean" }
+confirm = true
+
+[[workflow]]
+name = "api_recon_workflow"
+lua = "api-recon.lua"
+description = "Universal OpenAI-compatible v1 endpoint recon (models, chat, embeddings, header matrix, anthropic gateway)."
+schema = { baseUrl = "string", apiKey = "string" }
+confirm = false
+
+[[workflow]]
+name = "freeinference_recon_workflow"
+lua = "freeinference.lua"
+description = "FreeInference provider recon: verifies every documented claim empirically."
+schema = { apiKey = "string" }
+confirm = false
+
+[[workflow]]
+name = "cloudflare_recon_workflow"
+lua = "cloudflare.lua"
+description = "Cloudflare AI Gateway recon: /models, chat, embeddings, exposed slugs."
+schema = { apiToken = "string", accountId = "string", gatewayId = "string" }
+confirm = false
+
+[[workflow]]
+name = "opencode_zen_recon_workflow"
+lua = "opencode-zen.lua"
+description = "OpenCodeZen provider recon: models, chat, free-tier, translation, admission."
+schema = { baseUrl = "string", apiKey = "string" }
+confirm = false

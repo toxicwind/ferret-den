@@ -1,5 +1,6 @@
-import { spawn } from "child_process";
-import { accessSync, constants, existsSync } from "fs";
+import { spawn, execFileSync } from "child_process";
+import { accessSync, constants, existsSync, mkdtempSync, writeFileSync, rmSync } from "fs";
+import { tmpdir } from "os";
 import { join } from "path";
 
 // ---------------------------------------------------------------------------
@@ -250,4 +251,67 @@ export function checkAllBinaries(): void {
       "pd-mcp startup: " + missing.length + " binaries missing:\n  " + missing.join("\n  ")
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// runBinarySync — blocking sibling of runBinary, for the Lua workflow engine.
+// Returns the SAME RunResult shape synchronously so Lua receives a plain table
+// (wasmoon does not auto-unwrap an async host function's Promise into a table;
+// this sidesteps that by resolving before crossing the boundary).
+// ---------------------------------------------------------------------------
+export function runBinarySync(
+  binary: string,
+  args: string[],
+  opts: { timeoutMs?: number; stdin?: string } = {}
+): RunResult {
+  const timeoutMs = opts.timeoutMs ?? 300_000;
+  let bin: string;
+  try {
+    bin = resolveBinary(binary);
+  } catch (err) {
+    return {
+      lines: [],
+      stderr: err instanceof Error ? err.message : String(err),
+      exitCode: null,
+      timedOut: false,
+    };
+  }
+  try {
+    // dnsx requires hostnames as a FILE (-l), not stdin, on this box. When
+    // stdin is supplied for dnsx, write it to a temp file and pass -l instead.
+    let finalArgs = args;
+    let cleanup: (() => void) | null = null;
+    if (binary === "dnsx" && opts.stdin != null) {
+      const d = mkdtempSync(join(tmpdir(), "dnsx-sync-"));
+      const lf = join(d, "hosts.txt");
+      writeFileSync(lf, opts.stdin);
+      finalArgs = [...args, "-l", lf];
+      cleanup = () => rmSync(d, { recursive: true, force: true });
+    }
+    const stdoutRaw = execFileSync(bin, finalArgs, {
+      maxBuffer: 64 * 1024 * 1024,
+      timeout: timeoutMs,
+      encoding: "utf8",
+      killSignal: "SIGKILL",
+    });
+    cleanup?.();
+    return {
+      lines: stdoutRaw ? stdoutRaw.split("\n").map((l: string) => l.trim()).filter(Boolean) : [],
+      stderr: "",
+      exitCode: 0,
+      timedOut: false,
+    };
+  } catch (e: any) {
+    const timed = typeof e?.killed === "boolean" && (e?.signal === "SIGKILL" || timedOutSignal(e));
+    return {
+      lines: [],
+      stderr: e?.stderr ? String(e.stderr) : e?.message ? String(e.message) : String(e),
+      exitCode: typeof e?.status === "number" ? e.status : null,
+      timedOut: timed,
+    };
+  }
+}
+
+function timedOutSignal(e: any): boolean {
+  return e?.code === "ETIMEDOUT" || e?.signal === "SIGKILL";
 }
