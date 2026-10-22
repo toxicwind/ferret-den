@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# ferret-den — self-test gate (PASS/FAIL).
+# Recon-MCP (ProjectDiscovery wrapper) repo. Gate = type-safety of the recon +
+# workflow sources (tsc --noEmit) and the PD-bin launcher present. The live
+# `driver.ts` recon run is the heavy verification and is runnable via bin/run.
+#
+# ADDITIVE: commits bin/run, bin/check, mise.toml by pathspec only — the
+# tracked WIP (.gitignore/src/workflow-lua.ts/tsconfig.json from another writer)
+# is left untouched.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+export RUN_FAST_ACTIVE=0
+BUN="${BUN:-/home/toxic/.bun/bin/bun}"; [ -x "$BUN" ] || BUN=bun
+
+echo "== ferret-den check: start =="
+
+# Gate 1 — PD-bin launcher present (recon needs the upstream bins)
+[ -f ferret ] || { echo "FAIL: ferret launcher missing"; exit 1; }
+[ -x ferret ] || { echo "FAIL: ferret launcher not executable"; exit 1; }
+echo "OK  ferret launcher present"
+
+# Gate 2 — type-safe recon/workflow sources (tsc --noEmit)
+set +e
+out="$("$BUN" x tsc --noEmit 2>&1)"
+rc=$?
+set -e
+echo "$out"
+[ "$rc" -eq 0 ] || { echo "FAIL: tsc --noEmit rc=$rc"; exit 1; }
+
+echo "== ferret-den check: PASS =="
+exit 0

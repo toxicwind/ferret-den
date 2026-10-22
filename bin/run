@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# ferret-den — primary operation: run an end-to-end recon verification through
+# the ProjectDiscovery-MCP server (src/index.ts, stdio JSON-RPC). `driver.ts`
+# speaks tools/list + a live tools/call to each wrapped PD bin and exits
+# non-zero on any failure — this is the "recon run" proof.
+#
+# Usage:
+#   bin/run check          # tsc+launcher gate (fast, no live tools)
+#   bin/run                # live recon-verification driver (needs PD bins installed)
+#   bin/run ferret ...     # re-pull/install the ProjectDiscovery bins via `ferret`
+set -euo pipefail
+cd "$(dirname "$0")/.."
+export RUN_FAST_ACTIVE=0
+BUN="${BUN:-/home/toxic/.bun/bin/bun}"; [ -x "$BUN" ] || BUN=bun
+
+case "${1:-driver}" in
+  check) exec ./bin/check ;;
+  ferret) shift || true; exec ./ferret "$@" ;;
+  driver) exec "$BUN" driver.ts ;;
+  *) exec "$BUN" driver.ts ;;
+esac
