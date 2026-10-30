@@ -1,0 +1,172 @@
+{
+  "product": "ferret-den",
+  "path": "/home/toxic/pens/ranch/products/ferret-den",
+  "files": 80,
+  "detected_at": "2026-10-30T06:11:06.575976Z",
+  "env_vars": {
+    "DIR": [
+      "driver.ts"
+    ],
+    "FREEINFERENCE_KEY": [
+      "scripts/smoke-freeinference.ts"
+    ],
+    "FREEINFERENCE_QDRANT_PROXY_URL": [
+      "build/workflows/freeinference.js",
+      "src/workflows/freeinference.ts"
+    ],
+    "HEAVY_LIMIT": [
+      "server.ts"
+    ],
+    "HOME": [
+      "build/tools/runner.js",
+      "src/tools/runner.ts"
+    ],
+    "MAX_OUT": [
+      "server.ts"
+    ],
+    "PD_TOOLS_DIR": [
+      "build/tools/runner.js",
+      "examples/quickstart.sh",
+      "scripts/install.ts",
+      "scripts/link-bins.sh",
+      "scripts/write-env.sh",
+      "src/tools/runner.ts"
+    ],
+    "PD_WORDLIST": [
+      "build/tools/ffuf.js",
+      "src/tools/ffuf.ts"
+    ],
+    "SHUFFLEDNS_BIN": [
+      "build/tools/runner.js",
+      "src/tools/runner.ts"
+    ],
+    "USERPROFILE": [
+      "build/tools/runner.js",
+      "src/tools/runner.ts"
+    ],
+    "answer": [
+      "build/tools/dnsx.js",
+      "src/tools/dnsx.ts"
+    ],
+    "base": [
+      "build/workflows/api-recon.js",
+      "src/workflows/api-recon.ts"
+    ],
+    "bin": [
+      "build/tools/kit.js",
+      "server.ts",
+      "src/tools/kit.ts"
+    ],
+    "chatModel": [
+      "build/workflows/api-recon.js",
+      "build/workflows/opencode-zen.js",
+      "src/workflows/api-recon.ts",
+      "src/workflows/opencode-zen.ts"
+    ],
+    "crawlDepth": [
+      "build/workflows/recon.js",
+      "src/workflows/recon.ts"
+    ],
+    "doc": [
+      "build/workflows/api-recon.js",
+      "src/workflows/api-recon.ts"
+    ],
+    "domain": [
+      "server.ts"
+    ],
+    "err": [
+      "build/workflows/recon.js",
+      "src/workflows/recon.ts"
+    ],
+    "errFlag": [
+      "driver.ts"
+    ],
+    "field": [
+      "build/tools/dnsx.js",
+      "src/tools/dnsx.ts"
+    ],
+    "host": [
+      "build/tools/dnsx.js",
+      "build/workflow-lua.js",
+      "src/tools/dnsx.ts",
+      "src/workflow-lua.ts"
+    ],
+    "label": [
+      "server.ts"
+    ],
+    "luaFile": [
+      "build/workflow-lua.js",
+      "src/workflow-lua.ts"
+    ],
+    "member": [
+      "scripts/install.ts"
+    ],
+    "method": [
+      "driver.ts"
+    ],
+    "mode": [
+      "server.ts"
+    ],
+    "msg": [
+      "build/index.js",
+      "src/index.ts"
+    ],
+    "name": [
+      "build/index.js",
+      "build/tools/runner.js",
+      "driver.ts",
+      "server.ts",
+      "src/index.ts",
+      "src/tools/runner.ts"
+    ],
+    "path": [
+      "server.ts"
+    ],
+    "ports": [
+      "server.ts"
+    ],
+    "presentCount": [
+      "scripts/install.ts"
+    ],
+    "preview": [
+      "driver.ts"
+    ],
+    "rawName": [
+      "build/index.js",
+      "src/index.ts"
+    ],
+    "res": [
+      "server.ts"
+    ],
+    "severity": [
+      "server.ts"
+    ],
+    "spec": [
+      "build/tools/dnsx.js",
+      "src/tools/dnsx.ts"
+    ],
+    "target": [
+      "server.ts"
+    ],
+    "timeout": [
+      "server.ts"
+    ],
+    "timeoutMs": [
+      "build/tools/runner.js",
+      "src/tools/runner.ts"
+    ],
+    "timeoutSec": [
+      "server.ts"
+    ],
+    "tool": [
+      "driver.ts",
+      "server.ts"
+    ],
+    "wordlist": [
+      "server.ts"
+    ],
+    "workspaceFolder": [
+      ".vscode/mcp.json"
+    ]
+  }
+}

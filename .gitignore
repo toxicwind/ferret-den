@@ -6,3 +6,6 @@ build/
 *.swo
 .env
 .env.local
+
+tsconfig.tsbuildinfo
+build/
