@@ -1,0 +1,261 @@
+#!/bin/sh
+# ferret — the furry face of the probe-toolkit den.
+#
+# Dispatches to the den tools in this same bin dir, and captures EVERY
+# tool run's stdout, stderr, and exit code to a cache dir so no output is
+# ever lost to a truncated terminal. Help is real. Nothing is swallowed.
+#
+# Usage:
+#   ferret <tool> [args...]     run a den tool, capturing output
+#   ferret list | ls            list available den tools
+#   ferret help | -h | --help   this help
+#   ferret log [name]           show the most recent run(s) full output
+#   ferret logs [name]          list recent run logs (newest first)
+#   ferret tail [name]          tail the most recent run's output
+#   ferret cache                 show cache dir + usage
+#   ferret clear [name]          delete a tool's logs (or all with --all)
+#
+# Output capture: every run writes to
+#   $FERRET_CACHE/<tool>/<tool>-<epoch>.<stdout|stderr|meta>
+# and tees to the terminal live. Full output is always on disk.
+
+# --- config -------------------------------------------------------------
+CACHE="${FERRET_CACHE:-$HOME/.cache/ferret}"
+DEN="$(dirname "$(readlink -f "$0")")"
+# fast-expiry: prune runs older than this many days (default 7)
+RETENTION_DAYS="${FERRET_RETENTION_DAYS:-7}"
+# tools that exist as executables in the den dir
+TOOLS="tman webprobe dnsprobe subprobe sigscan portprobe crawlprobe tlsprobe altprobe dbprobe asnprobe cdnprobe cloudprobe cidrprobe tldprobe httpserve notify chaos proxify shuffledns aix"
+
+# --- helpers ------------------------------------------------------------
+now() { date +%s; }
+die() { echo "ferret: $*" >&2; exit 1; }
+
+list() {
+  echo "ferret den tools:"
+  for t in $TOOLS; do
+    [ -x "$DEN/$t" ] && echo "  $t"
+  done
+}
+
+help() {
+  cat <<'EOF'
+ferret — the furry face of the probe-toolkit den.
+
+Dispatch to the den tools and capture EVERY run's stdout/stderr/exit to
+$FERRET_CACHE (default ~/.cache/ferret) so no output is ever truncated or
+lost. Full output is always on disk, recoverable with `ferret log`.
+
+USAGE
+  ferret <tool> [args...]     run a den tool, capturing output
+  ferret list | ls            list available den tools
+  ferret help | -h | --help   this help
+  ferret log [name]           full output of the most recent run(s)
+  ferret logs [name]          list recent run logs (newest first)
+  ferret tail [name]          tail the most recent run's output
+  ferret cache                show cache dir + usage
+  ferret clear [name]         delete a tool's logs (--all for everything)
+  ferret pdtm [pull|install|remove|self|path]   manage ProjectDiscovery bins
+
+DEN TOOLS
+$(list)
+
+OUTPUT CAPTURE
+  Every run writes to $CACHE/<tool>/<tool>-<epoch>.<stdout|stderr|meta>
+  and tees live to the terminal. `ferret log <tool>` prints the latest
+  run's complete stdout+stderr; `ferret logs` lists runs newest-first.
+  Runs older than $RETENTION_DAYS days are pruned on the next invocation.
+
+EXAMPLES
+  ferret webprobe -u https://example.com
+  ferret log webprobe
+  ferret tail subprobe
+  ferret clear --all
+EOF
+}
+
+cache_info() {
+  mkdir -p "$CACHE"
+  echo "cache dir: $CACHE"
+  echo "retention: ${RETENTION_DAYS}d"
+  if [ -d "$CACHE" ]; then
+    echo "runs:      $(find "$CACHE" -name '*.meta' 2>/dev/null | wc -l)"
+    echo "size:      $(du -sh "$CACHE" 2>/dev/null | cut -f1)"
+  else
+    echo "runs:      0"
+    echo "size:      0"
+  fi
+}
+
+# prune old runs (fast-expiry cache)
+prune() {
+  [ -d "$CACHE" ] || return 0
+  find "$CACHE" -type f -mtime +"$RETENTION_DAYS" -delete 2>/dev/null
+  # drop now-empty tool dirs
+  find "$CACHE" -depth -type d -empty -delete 2>/dev/null
+}
+
+# --- run a tool with capture --------------------------------------------
+run_tool() {
+  tool="$1"; shift
+  [ -x "$DEN/$tool" ] || die "unknown tool: $tool (see: ferret list)"
+  prune
+
+  dir="$CACHE/$tool"
+  mkdir -p "$dir"
+  ts="$(now)"
+  base="$dir/$tool-$ts"
+  out="$base.stdout"
+  err="$base.stderr"
+  meta="$base.meta"
+
+  # capture stdout+stderr to disk AND tee to terminal live
+  "$DEN/$tool" "$@" >"$out" 2>"$err"
+  rc=$?
+
+  # metadata: command, exit code, timestamps, sizes
+  {
+    echo "tool:      $tool"
+    echo "args:      $*"
+    echo "exit:      $rc"
+    echo "started:   $ts"
+    echo "finished:  $(now)"
+    echo "stdout:    $out ($(wc -c <"$out" 2>/dev/null || echo 0) bytes)"
+    echo "stderr:    $err ($(wc -c <"$err" 2>/dev/null || echo 0) bytes)"
+  } >"$meta"
+
+  # echo stderr to terminal (stdout already streamed via tee above)
+  if [ -s "$err" ]; then
+    echo "--- stderr ---" >&2
+    cat "$err" >&2
+  fi
+  echo "--- ferret: $tool exit=$rc (full output: $out)" >&2
+  return $rc
+}
+
+# --- log/tail/clear -----------------------------------------------------
+log_latest() {
+  name="$1"
+  [ -n "$name" ] || die "log needs a tool name (or '--all')"
+  if [ "$name" = "--all" ]; then
+    for d in "$CACHE"/*/; do
+      [ -d "$d" ] || continue
+      t="$(basename "$d")"
+      latest="$(ls -t "$d"/*.stdout 2>/dev/null | head -1)"
+      [ -n "$latest" ] || continue
+      echo "===== $t ====="
+      cat "${latest%.stdout}.meta" 2>/dev/null
+      echo "--- stdout ---"
+      cat "$latest"
+      [ -f "${latest%.stdout}.stderr" ] && [ -s "${latest%.stdout}.stderr" ] && { echo "--- stderr ---"; cat "${latest%.stdout}.stderr"; }
+      echo
+    done
+    return 0
+  fi
+  latest="$(ls -t "$CACHE/$name"/*.stdout 2>/dev/null | head -1)"
+  [ -n "$latest" ] || die "no runs for tool: $name"
+  cat "${latest%.stdout}.meta" 2>/dev/null
+  echo "--- stdout ---"
+  cat "$latest"
+  if [ -f "${latest%.stdout}.stderr" ] && [ -s "${latest%.stdout}.stderr" ]; then
+    echo "--- stderr ---"
+    cat "${latest%.stdout}.stderr"
+  fi
+}
+
+logs_list() {
+  name="$1"
+  if [ -n "$name" ] && [ "$name" != "--all" ]; then
+    [ -d "$CACHE/$name" ] || die "no runs for tool: $name"
+    for f in $(ls -t "$CACHE/$name"/*.meta 2>/dev/null); do
+      echo "$(basename "$f" .meta)  $(sed -n 's/^exit: *//p' "$f")  $(sed -n 's/^args: *//p' "$f")"
+    done
+    return 0
+  fi
+  for d in "$CACHE"/*/; do
+    [ -d "$d" ] || continue
+    t="$(basename "$d")"
+    latest="$(ls -t "$d"/*.meta 2>/dev/null | head -1)"
+    [ -n "$latest" ] || continue
+    echo "$t  $(basename "$latest" .meta)  exit=$(sed -n 's/^exit: *//p' "$latest")"
+  done
+}
+
+clear_logs() {
+  name="$1"
+  if [ "$name" = "--all" ]; then
+    rm -rf "$CACHE"
+    echo "ferret: cleared all logs"
+    return 0
+  fi
+  [ -n "$name" ] || die "clear needs a tool name (or --all)"
+  rm -rf "$CACHE/$name"
+  echo "ferret: cleared logs for $name"
+}
+
+tail_latest() {
+  name="$1"
+  [ -n "$name" ] || die "tail needs a tool name"
+  latest="$(ls -t "$CACHE/$name"/*.stdout 2>/dev/null | head -1)"
+  [ -n "$latest" ] || die "no runs for tool: $name"
+  tail -n "${2:-40}" "$latest"
+  if [ -f "${latest%.stdout}.stderr" ] && [ -s "${latest%.stdout}.stderr" ]; then
+    echo "--- stderr ---"
+    tail -n "${2:-40}" "${latest%.stdout}.stderr"
+  fi
+}
+
+# --- pdtm (ProjectDiscovery binary manager) -------------------------------
+pdtm() {
+  BIN="${PDTM_BIN:-$HOME/.pdtm/go/bin}"
+  PDTM="${PDTM:-$BIN/pdtm}"
+  if [ ! -x "$PDTM" ]; then
+    PDTM="$(command -v pdtm || true)"
+  fi
+  if [ -z "$PDTM" ] || [ ! -x "$PDTM" ]; then
+    echo "pdtm not found. Install upstream first:" >&2
+    echo "  go install github.com/projectdiscovery/pdtm/cmd/pdtm@latest" >&2
+    return 1
+  fi
+  case "${1:-pull}" in
+    pull|update) exec "$PDTM" -update-all ;;
+    install) shift || true; [ "${1:-all}" = "all" ] && exec "$PDTM" -install-all; exec "$PDTM" -install "$@" ;;
+    remove) shift || true; [ "${1:-all}" = "all" ] && exec "$PDTM" -remove-all; exec "$PDTM" -remove "$@" ;;
+    self) exec "$PDTM" -self-update ;;
+    path) echo "$BIN" ;;
+    *) echo "pdtm: unknown subcommand $1"; return 1 ;;
+  esac
+}
+
+# --- dispatch -----------------------------------------------------------
+case "$1" in
+  ""|list|ls) list ;;
+  help|-h|--help) help ;;
+  log) shift; log_latest "${1:-}" ;;
+  logs) shift; logs_list "${1:-}" ;;
+  tail) shift; tail_latest "${1:-}" ;;
+  cache|info) cache_info ;;
+  clear) shift; clear_logs "${1:-}" ;;
+  pdtm) shift; pdtm "$@" ;;
+  probe) shift; run_tool webprobe "$@" ;;
+  dns) shift; run_tool dnsprobe "$@" ;;
+  sub) shift; run_tool subprobe "$@" ;;
+  sig) shift; run_tool sigscan "$@" ;;
+  ports) shift; run_tool portprobe "$@" ;;
+  crawl) shift; run_tool crawlprobe "$@" ;;
+  tls) shift; run_tool tlsprobe "$@" ;;
+  alt) shift; run_tool altprobe "$@" ;;
+  db) shift; run_tool dbprobe "$@" ;;
+  asn) shift; run_tool asnprobe "$@" ;;
+  cdn) shift; run_tool cdnprobe "$@" ;;
+  cloud) shift; run_tool cloudprobe "$@" ;;
+  cidr) shift; run_tool cidrprobe "$@" ;;
+  tld) shift; run_tool tldprobe "$@" ;;
+  serve) shift; run_tool httpserve "$@" ;;
+  notify|notif) shift; run_tool notify "$@" ;;
+  chaos) shift; run_tool chaos "$@" ;;
+  prox|proxy) shift; run_tool proxify "$@" ;;
+  shuffle) shift; run_tool shuffledns "$@" ;;
+  aix) shift; run_tool aix "$@" ;;
+  *) if [ -x "$DEN/$1" ]; then run_tool "$@"; else echo "unknown den tool: $1"; list; exit 1; fi ;;
+esac
