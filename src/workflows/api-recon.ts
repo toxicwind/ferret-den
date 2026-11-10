@@ -72,6 +72,13 @@ export interface ApiReconQdrantStep extends ApiReconStepResult {
   collections: string[];
 }
 
+/** Max-output-token detection step (algorithmic binary-search ceiling). */
+export interface ApiReconMaxOutputStep extends ApiReconStepResult {
+  model: string;
+  /** The largest max_tokens the endpoint accepts (0 = not probe-able). */
+  maxOutputTokens: number;
+}
+
 export interface ApiReconFinding {
   kind: string;
   detail: string;
@@ -101,6 +108,7 @@ export interface ApiReconWorkflowResult {
     headerMatrix?: ApiReconHeaderMatrixResult[];
     anthropicGateway?: ApiReconAnthropicStep;
     localQdrant?: ApiReconQdrantStep;
+    maxOutput?: ApiReconMaxOutputStep;
   };
   findings: ApiReconFinding[];
 }
@@ -399,6 +407,72 @@ async function probeLocalQdrant(
 }
 
 /**
+ * Algorithmic max-output-token detection: binary-search the largest
+ * max_tokens the endpoint accepts for a model. A 400 means the ceiling was
+ * exceeded (search lower); a 2xx means it is acceptable (search higher).
+ * This is the empirical ground truth the catalog generator consumes — the
+ * advertised metadata is routinely stale (see tau output-ceilings.ts).
+ */
+async function probeMaxOutputTokens(
+  profile: ApiReconProfile,
+  model: string,
+): Promise<ApiReconMaxOutputStep> {
+  const url = `${trimTrailingSlash(profile.baseUrl)}/chat/completions`;
+  const headers = {
+    "Content-Type": "application/json",
+    ...authHeaders(profile),
+    ...(profile.headers ?? {}),
+  };
+  const start = Date.now();
+
+  const probe = async (maxTokens: number): Promise<boolean> => {
+    const res = await fetchJson<unknown>(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "user", content: "ping" }],
+        max_tokens: maxTokens,
+        stream: false,
+      }),
+      timeoutMs: profile.timeoutMs,
+    });
+    if (res.status === 400) return false;
+    if (res.ok) return true;
+    throw new Error(`max-output probe: HTTP ${res.status}`);
+  };
+
+  const step: ApiReconMaxOutputStep = {
+    ok: false,
+    latencyMs: Date.now() - start,
+    model,
+    maxOutputTokens: 0,
+  };
+
+  try {
+    // Even the minimum must be accepted, else the model is unusable.
+    if (!(await probe(1))) {
+      step.error = "minimum max_tokens rejected";
+      return step;
+    }
+    let lo = 1;
+    let hi = 1_000_000;
+    while (lo + 1 < hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      const ok = await probe(mid);
+      if (ok) lo = mid;
+      else hi = mid;
+    }
+    step.ok = true;
+    step.maxOutputTokens = lo;
+    step.detail = `${lo} tokens`;
+  } catch (err) {
+    step.error = compactDetail(err instanceof Error ? err.message : String(err));
+  }
+  return step;
+}
+
+/**
  * Run the universal v1 endpoint recon against a provider profile.
  * Read-only: GETs and one deterministic chat/embedding round-trip.
  */
@@ -491,6 +565,23 @@ export async function runApiReconWorkflow(
       result.findings.push({
         kind: "local-qdrant-ok",
         detail: `${qdrantStep.collections.length} collections`,
+      });
+    }
+  }
+
+  // Step 7: algorithmic max-output-token detection on the chat model
+  if (chatModel) {
+    const maxOutput = await probeMaxOutputTokens(profile, chatModel);
+    result.steps.maxOutput = maxOutput;
+    if (maxOutput.ok) {
+      result.findings.push({
+        kind: "max-output-tokens",
+        detail: `${chatModel} ceiling=${maxOutput.maxOutputTokens}`,
+      });
+    } else {
+      result.findings.push({
+        kind: "max-output-tokens-failed",
+        detail: compactDetail(maxOutput.error ?? "unknown"),
       });
     }
   }
