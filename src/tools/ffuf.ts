@@ -81,7 +81,7 @@ export async function executeFuzz(
 
   // ffuf writes its JSON result document to the -o FILE (not stdout — `-o -`
   // is literally a filename). Persist to a temp file, read back, then clean
-  // up: the estate doctrine is "read results from a file, never exec stdout."
+  // up: the Pens doctrine is "read results from a file, never exec stdout."
   const tdir = mkdtempSync(join(tmpdir(), "den-sniff-"));
   const outfile = join(tdir, "results.json");
   args.push("-o", outfile);

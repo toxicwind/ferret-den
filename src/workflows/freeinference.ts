@@ -32,7 +32,7 @@ export interface FreeInferenceReconOptions {
   chatProbeModel?: string;
   /** Embedding model to probe. Defaults to bge-m3. */
   embeddingModel?: string;
-  /** Local qdrant URL to also probe (estate runs one on 25133). */
+  /** Local qdrant URL to also probe (Pens runs one on 25133). */
   localQdrantUrl?: string;
   /** Models the docs claim exist. Defaults to the documented set. */
   documentedModels?: string[];

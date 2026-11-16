@@ -7,7 +7,7 @@
  * else (mid-October 2026: also at /zen/v1 even for OpenCode's own requests;
  * the same request at /inference/v1 answers 200).
  *
- * This workflow probes whether the OpenCode Zen endpoint admits the estate's
+ * This workflow probes whether the OpenCode Zen endpoint admits the Pens's
  * requests, recording the header matrix that Zen's gate checks:
  *   - User-Agent (must be versioned opencode/<ver> ai-sdk/... runtime/bun/...)
  *   - x-opencode-session / x-opencode-session-id (session attribution)

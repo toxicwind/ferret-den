@@ -4,7 +4,7 @@ import { tmpdir } from "os";
 import { join } from "path";
 
 // ---------------------------------------------------------------------------
-// Binary resolution — estate-aware.
+// Binary resolution — Pens-aware.
 // PD_TOOLS_DIR defaults to $HOME/.pdtm/go/bin; SHUFFLEDNS_BIN to that dir.
 // separate yote go/bin path. Per-binary override: PD_<NAME>_BIN
 // (e.g. PD_HTTPX_BIN=/custom/path/httpx).
@@ -180,7 +180,7 @@ export function ok<T>(payload: T): { ok: true } & { result: T } {
   return { ok: true, result: payload };
 }
 // ---------------------------------------------------------------------------
-// Heavy-scan concurrency gate (grafted from estate pd-mcp server.ts).
+// Heavy-scan concurrency gate (grafted from Pens pd-mcp server.ts).
 // Port/vuln/mass-bruteforce scans share a 2-slot cap; extras queue.
 // ---------------------------------------------------------------------------
 const HEAVY_TOOLS = new Set(["naabu", "nuclei", "shuffledns"]);
@@ -223,7 +223,7 @@ export async function withHeavyGate<T>(name: string, fn: () => Promise<T>): Prom
 }
 
 // ---------------------------------------------------------------------------
-// Startup binary check (grafted from estate pd-mcp server.ts).
+// Startup binary check (grafted from Pens pd-mcp server.ts).
 // Fail fast at launch with a clear message instead of failing mid-call.
 // ---------------------------------------------------------------------------
 const ALL_BINARIES = [

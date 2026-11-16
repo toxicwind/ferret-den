@@ -570,7 +570,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 // Start the server
 async function main() {
-  // Fail fast if binaries are missing (grafted from estate pd-mcp).
+  // Fail fast if binaries are missing (grafted from Pens pd-mcp).
   // 2026-10-15, safety directive: workflows are NOT auto-run at startup
   // unless scheduled. On missing binaries the server aborts loudly with the
   // fix command — the installer only ever runs when explicitly invoked

@@ -1,6 +1,6 @@
 // pd-mcp v1.0 — ProjectDiscovery MCP server (Bun/TypeScript)
 // stdio JSON-RPC with Content-Length framing: initialize -> tools/list -> tools/call.
-// Wraps the estate's ProjectDiscovery Go binaries (argv arrays only — NEVER shell strings).
+// Wraps the Pens's ProjectDiscovery Go binaries (argv arrays only — NEVER shell strings).
 // All diagnostics go to stderr with [pd-mcp] prefix; stdout carries ONLY framed RPC replies.
 
 import { spawn } from "node:child_process";

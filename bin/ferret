@@ -22,6 +22,8 @@
 # --- config -------------------------------------------------------------
 CACHE="${FERRET_CACHE:-$HOME/.cache/ferret}"
 DEN="$(dirname "$(readlink -f "$0")")"
+# fallback: the den tools live in $HOME/.local/bin; a relocated/symlinked ferret misses them.
+if [ ! -x "$DEN/webprobe" ] && [ -d "$HOME/.local/bin" ]; then DEN="$HOME/.local/bin"; fi
 # fast-expiry: prune runs older than this many days (default 7)
 RETENTION_DAYS="${FERRET_RETENTION_DAYS:-7}"
 # tools that exist as executables in the den dir

@@ -11,7 +11,7 @@
  * This is the universal core. Provider derivatives (freeinference.ts,
  * cloudflare.ts) build on it by supplying an ApiReconProfile.
  *
- * Patterns harvested from the estate via pattern-forge:
+ * Patterns harvested from the Pens via pattern-forge:
  *   withTimeoutSignal + clear  (providerDiscovery.ts)
  *   Bearer vs X-API-Key auth   (providerDiscovery.ts — bankr heuristic)
  *   dedupe Set on model ids    (listOpenAICompatibleModels)
@@ -113,7 +113,7 @@ export interface ApiReconWorkflowResult {
   findings: ApiReconFinding[];
 }
 
-/** AbortSignal with a cleanup timer, mirroring the estate's withTimeoutSignal. */
+/** AbortSignal with a cleanup timer, mirroring the Pens's withTimeoutSignal. */
 function withTimeoutSignal(timeoutMs: number): {
   signal: AbortSignal;
   clear: () => void;
