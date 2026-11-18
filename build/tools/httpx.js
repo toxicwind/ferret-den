@@ -1,0 +1,29 @@
+import { runBinary, parseJsonl, cleanList } from "./runner.js";
+export async function executeHttpx(urls, followRedirects = false, techDetect = false) {
+    const list = cleanList(urls, 1000, 2000);
+    if (list.length === 0)
+        return { responses: [], count: 0, error: "no valid urls/hosts" };
+    const args = ["-json", "-silent"];
+    if (followRedirects)
+        args.push("-fr");
+    if (techDetect)
+        args.push("-td");
+    const r = await runBinary("httpx", args, {
+        timeoutMs: 300_000,
+        stdin: list.join("\n") + "\n",
+    });
+    const responses = parseJsonl(r.lines, (p) => p.url || p.host
+        ? {
+            url: String(p.url || p.host),
+            statusCode: p.status_code,
+            contentLength: p.content_length,
+            title: p.title,
+            webserver: p.webserver,
+            tech: Array.isArray(p.tech) ? p.tech : undefined,
+        }
+        : null);
+    if (r.exitCode !== 0 && responses.length === 0) {
+        return { responses: [], count: 0, error: `httpx failed (exit ${r.exitCode}): ${r.stderr.slice(-2000)}` };
+    }
+    return { responses, count: responses.length };
+}
